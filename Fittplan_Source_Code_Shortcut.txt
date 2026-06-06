@@ -1,0 +1,114 @@
+/* 
+   Fittplan - Insurance & Utilities 
+   Shortcut Version for Thesis Source Code Appendix
+   -------------------------------------------------
+   Core Logic: SPAs (Single Page Application) using Vanilla JS, 
+   CSS3 Flexbox/Grid, and responsive design for Insurance Agents.
+*/
+
+// --- 1. CORE STYLES (CSS Utility & Theme) ---
+:root {
+    --primary: #0b2d5e; --accent: #f6b73c; --dark: #0b0f1a;
+    --card-bg: #141a2b; --border: rgba(140, 170, 255, 0.2);
+    --text-muted: #8ea0d2; --success: #4ade80;
+}
+body {
+    background: linear-gradient(180deg, #0a0f1c 0%, #0d1323 100%);
+    color: #e6ecff; font-family: 'Space Grotesk', sans-serif;
+}
+.hidden { display: none !important; }
+.card {
+    background: rgba(20, 26, 43, 0.6); backdrop-filter: blur(12px);
+    border: 1px solid var(--border); border-radius: 20px; padding: 20px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #002e5b, #0a4a8a);
+    color: white; border: none; border-radius: 12px; padding: 14px;
+}
+
+<!-- --- 2. CORE HTML STRUCTURE (Skeleton) --- -->
+<nav class="header">
+    <div class="logo-brand" onclick="showView('home')">...</div>
+    <div class="nav-icons">
+        <button onclick="showView('tools')"><i class="fas fa-th-large"></i></button>
+    </div>
+</nav>
+
+<main>
+    <!-- View: Home -->
+    <div id="view-home">
+        <div class="hero">...</div>
+        <div class="card">
+            <input type="text" id="name" placeholder="Client Name">
+            <select id="plan">...</select>
+            <button onclick="calculate()">CALCULATE</button>
+        </div>
+        <div id="results" class="hidden">...</div>
+    </div>
+
+    <!-- View: Tools -->
+    <div id="view-tools" class="hidden">
+        <div class="tool-grid-modern">
+            <div onclick="showView('needs-analysis')">Need Analysis</div>
+            <div onclick="showView('poster-builder')">Poster Builder</div>
+        </div>
+    </div>
+</main>
+
+<div id="pdf-viewer-overlay" class="hidden">
+    <iframe id="pdf-iframe"></iframe>
+</div>
+
+// --- 3. CORE JAVASCRIPT LOGIC (SPA & Math) ---
+const allViews = ['home', 'tools', 'needs-analysis', 'posters', 'profile', ...];
+
+// Simple Routing Logic
+function showView(name) {
+    allViews.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.add('hidden');
+    });
+    document.getElementById('view-' + name).classList.remove('hidden');
+    window.scrollTo(0, 0);
+    // Initialize specific view data here...
+}
+
+// Basic Insurance Calculation Logic
+const planRates = {
+    "914": { name: "New Endowment", bonus: 45 },
+    "915": { name: "New Jeevan Anand", bonus: 48 },
+    // more plans...
+};
+
+function calculate() {
+    const sa = parseFloat(document.getElementById('sa').value);
+    const term = parseInt(document.getElementById('term').value);
+    const planCode = document.getElementById('plan').value;
+    const plan = planRates[planCode];
+
+    if (isNaN(sa) || sa <= 0) return alert("Invalid Sum Assured");
+
+    let bonus = (sa / 1000) * plan.bonus * term;
+    let maturity = sa + bonus;
+
+    document.getElementById('res-maturity').innerText = '₹' + maturity.toLocaleString('en-IN');
+    document.getElementById('results').classList.remove('hidden');
+}
+
+// PDF Viewer Management
+function openPDFUrl(url, title) {
+    document.getElementById('pdf-viewer-title').innerText = title;
+    document.getElementById('pdf-iframe').src = url;
+    document.getElementById('pdf-viewer-overlay').classList.remove('hidden');
+}
+
+// SVG Poster Generation Example
+const buildPosterSvg = ({ headline, subline, theme }) => {
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
+        <rect width="100%" height="100%" fill="#0b1e3a"/>
+        <text x="80" y="230" font-size="56" fill="#fff">${headline}</text>
+        <text x="80" y="300" font-size="26" fill="#c7d8ff">${subline}</text>
+    </svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};

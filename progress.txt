@@ -1,0 +1,12 @@
+# Fittplan - Progress Log
+
+## Current Session Status
+- **Active Task**: Dynamic policy term dropdowns.
+- **Target Outcome**: Policy term selection updates dynamically based on the chosen plan to enforce realistic policy terms.
+
+## Task Checklist
+- [x] Create `PRD.md` and `progress.txt` for the Fittplan website.
+- [x] Implement dynamic term dropdown generation in `index.html` based on plan rules.
+- [x] Adjust premium and PPT (Premium Payment Term) calculations in `calculate()` to match the dynamic terms.
+- [x] Verify functionality of the policy calculator by testing different plan/term combinations.
+- [x] Update `progress.txt` with outcomes.

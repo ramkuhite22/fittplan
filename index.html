@@ -1,0 +1,2758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fittplan - Insurance & Utilities</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary: #0b2d5e;
+            --accent: #f6b73c;
+            --dark: #0b0f1a;
+            --dark2: #151b2c;
+            --dark3: #1d2438;
+            --blue-soft: #b8c7ff;
+            --card-bg: #141a2b;
+            --panel: rgba(20, 26, 43, 0.92);
+            --glow: rgba(120, 163, 255, 0.12);
+            --border: rgba(140, 170, 255, 0.2);
+            --accent-2: #3db1c4;
+            --surface: rgba(15, 20, 35, 0.9);
+            --text-muted: #8ea0d2;
+            --success: #4ade80;
+            --warning: #f59e0b;
+            --danger: #f87171;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0a0f1c;
+            color: #e6ecff;
+            font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .hidden { display: none !important; }
+
+        /* NAV */
+        .header {
+            background: rgba(0, 31, 64, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid rgba(140, 170, 255, 0.2);
+        }
+        .logo-img { height: 36px; width: 36px; object-fit: contain; cursor: pointer; border-radius: 6px; }
+        .logo-brand { display: flex; align-items: center; gap: 9px; background: none; border: none; cursor: pointer; padding: 0; }
+        .logo-text { font-size: 22px; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(135deg, #90b8ff 0%, #ffffff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; }
+        .nav-icons { display: flex; gap: 18px; align-items: center; }
+        .nav-icons button { background: none; border: none; color: #b4c5ff; font-size: 20px; cursor: pointer; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15, 17, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(140, 170, 255, 0.2);
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 8px 0 12px;
+            z-index: 99;
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .bottom-nav button {
+            background: none; border: none; color: #6b7a99;
+            font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer;
+            padding: 4px 12px;
+            transition: color 0.2s;
+        }
+        .bottom-nav button.active { color: #b4c5ff; }
+        .bottom-nav button i { font-size: 18px; }
+
+        /* MAIN CONTENT */
+        main { padding: 18px; max-width: 560px; margin: 0 auto; padding-bottom: 90px; }
+
+        /* CARD */
+        .card {
+            background: rgba(20, 26, 43, 0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(140, 170, 255, 0.25);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .card-white {
+            background: white; color: #1a1a2e;
+            border-radius: 16px; padding: 18px; margin-bottom: 14px;
+        }
+
+        /* SECTION TITLE */
+        .section-title { font-size: 18px; font-weight: 700; color: #e6ecff; margin-bottom: 16px; padding: 0 2px; letter-spacing: 0.2px; }
+        .section-header { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 14px; }
+        .section-header small { color:#7e8bb5; font-size: 12px; }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(145deg, rgba(26, 54, 120, 0.4), rgba(15, 20, 35, 0.6));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(120, 160, 255, 0.4);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: -50% 10% auto auto;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(246, 183, 60, 0.15), transparent 75%);
+            pointer-events: none;
+        }
+        .hero-title {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            margin-bottom: 6px;
+        }
+        .hero-sub {
+            color: #b3c2ff;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .hero-actions { display:flex; gap:10px; margin-top: 14px; flex-wrap: wrap; }
+        .hero-actions button { flex: 1 1 140px; }
+        .stat-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+        .stat-chip {
+            background: rgba(12, 20, 36, 0.7);
+            border: 1px solid rgba(120, 160, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        .stat-chip b { display:block; font-size: 13px; color:#e6ecff; }
+        .stat-chip span { font-size: 10px; color:#7f8fbd; }
+
+        /* RESOURCE GRID */
+        .resource-grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
+        .asset-card {
+            background: rgba(16, 22, 38, 0.85);
+            border: 1px solid rgba(120, 160, 255, 0.2);
+            border-radius: 16px;
+            padding: 14px;
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .asset-card strong { font-size: 14px; color: #e6ecff; display:block; }
+        .asset-card small { color:#7b8bb6; font-size: 11px; }
+        .asset-pill {
+            background: rgba(120, 160, 255, 0.15);
+            color:#bcd0ff;
+            border: 1px solid rgba(120, 160, 255, 0.3);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .media-grid { display:grid; grid-template-columns: 1fr; gap: 10px; }
+        .media-thumb {
+            background: linear-gradient(135deg, rgba(36, 60, 120, 0.7), rgba(20, 26, 43, 0.9));
+            border: 1px dashed rgba(140, 170, 255, 0.3);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            font-size: 11px;
+            color: #8ea0d2;
+        }
+        .thumb-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .thumb-grid img { width:100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; border: 1px solid rgba(120,160,255,0.25); }
+
+        @media (min-width: 720px) {
+            main { max-width: 860px; }
+            .resource-grid { grid-template-columns: repeat(2, 1fr); }
+            .media-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* HORIZONTAL SCROLL TOOLS */
+        .tools-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .tools-scroll::-webkit-scrollbar { display: none; }
+        .tool-tile {
+            background: rgba(20, 26, 43, 0.35);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(140, 170, 255, 0.25);
+            border-radius: 16px;
+            padding: 16px 12px;
+            min-width: 100px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, border-color 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .tool-tile:active { transform: scale(0.95); background: rgba(42, 48, 80, 0.6); }
+        .tool-tile i { font-size: 28px; color: #b4c5ff; display: block; margin-bottom: 10px; }
+        .tool-tile span { font-size: 10px; font-weight: 600; color: #8898cc; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.3; display: block; }
+
+        /* MENU ITEM (list style) */
+        .menu-item {
+            background: rgba(20, 26, 43, 0.35);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(140, 170, 255, 0.25);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .menu-item:active { transform: scale(0.98); background: rgba(42, 48, 80, 0.6); }
+        .menu-left { display: flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 500; color: #b4c5ff; }
+        .menu-left i { font-size: 18px; color: #7a8fcc; width: 24px; text-align: center; }
+        .menu-right { display: flex; align-items: center; gap: 8px; }
+        .new-badge { background: #b4c5ff; color: #1a1c24; font-size: 8px; font-weight: 800; padding: 2px 7px; border-radius: 20px; }
+        .count-badge { background: #2a3050; color: #b4c5ff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .menu-chevron { color: #4a5580; font-size: 12px; }
+
+        /* FORM CARDS */
+        .form-card {
+            background: linear-gradient(135deg, #002e5b 0%, #0a4a8a 100%);
+            color: white; border-radius: 16px; padding: 16px;
+            margin-bottom: 12px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,46,91,0.4);
+            transition: transform 0.2s;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .form-card:active { transform: scale(0.97); }
+        .form-icon { background: rgba(255,255,255,0.15); border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .form-badge { background: #f39c12; color: white; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; display: inline-block; margin-top: 4px; }
+        .form-save-btn { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 11px; padding: 6px 10px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+
+        /* INPUT STYLES */
+        .dark-input {
+            background: #0f1117; border: 1px solid #2a3050; color: #e0e6ff;
+            border-radius: 10px; padding: 10px 14px; width: 100%; outline: none; font-size: 14px;
+        }
+        .dark-input:focus { border-color: #6880cc; }
+        .dark-select { background: #0f1117; border: 1px solid #2a3050; color: #e0e6ff; border-radius: 10px; padding: 10px 14px; width: 100%; outline: none; font-size: 14px; }
+        .input-label { font-size: 11px; color: #6b7a99; margin-bottom: 5px; font-weight: 600; letter-spacing: 0.3px; }
+
+        /* BUTTONS */
+        .btn-primary { background: linear-gradient(135deg, #002e5b, #0a4a8a); color: white; border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; letter-spacing: 0.5px; }
+        .btn-primary:active { opacity: 0.85; }
+        .btn-red { background: #c0392b; color: white; border: none; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; }
+        .btn-green { background: #1e7e50; color: white; border: none; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 700; cursor: pointer; width: 100%; }
+
+        /* RESULT BOXES */
+        .result-highlight { background: linear-gradient(135deg, #0a3a1a, #0d4d24); border: 1px solid #1a7a40; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+        .result-label { font-size: 11px; color: #5db87a; margin-bottom: 4px; }
+        .result-value { font-size: 24px; font-weight: 800; color: #4ade80; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a3050; font-size: 13px; color: #a0aec0; }
+        .result-row:last-child { border-bottom: none; }
+        .result-row span:last-child { font-weight: 600; color: #b4c5ff; }
+
+        /* VIDEO SECTION */
+        .video-item { background: var(--card-bg); border: 1px solid #2a3050; border-radius: 16px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer; transition: background 0.2s; }
+        .video-item:active { background: #2a3050; }
+        .video-left { display: flex; align-items: center; gap: 14px; }
+        .video-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .video-title { font-size: 15px; font-weight: 600; color: #d0d8ff; }
+        .video-sub { font-size: 11px; color: #5a6a99; margin-top: 2px; }
+
+        /* PDF VIEWER */
+        .pdf-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: flex; flex-direction: column; }
+        .pdf-viewer-header { background: #002e5b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .pdf-viewer-header span { font-size: 13px; font-weight: 700; flex: 1; }
+        .pdf-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 7px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+        #pdf-iframe { flex: 1; width: 100%; border: none; }
+
+        /* VIDEO PLAYER MODAL */
+        .video-player-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 1100; display: flex; flex-direction: column; }
+        .video-player-header { background: linear-gradient(135deg,#001f40,#002e5b); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-shrink: 0; }
+        .video-player-header span { font-size: 13px; font-weight: 700; flex: 1; color: #d0d8ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .video-player-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px; flex-direction: column; gap: 12px; overflow: hidden; }
+        #local-video-player { width: 100%; max-height: calc(100vh - 120px); border-radius: 12px; background: #000; outline: none; }
+        .video-player-sub { font-size: 12px; color: #6b7a99; text-align: center; }
+
+        /* PROFILE */
+        .profile-input { background: transparent; border: 1px solid #3a4560; color: white; border-radius: 10px; padding: 12px; width: 100%; outline: none; font-size: 14px; }
+        .profile-input:focus { border-color: #b4c5ff; }
+        .save-btn { background: #b4c5ff; color: #1a1c24; font-weight: 800; padding: 14px; border-radius: 50px; width: 100%; margin-top: 16px; border: none; cursor: pointer; font-size: 14px; }
+
+        /* HISTORY CARDS */
+        .history-card { background: var(--card-bg); border: 1px solid #2a3050; border-left: 4px solid #002e5b; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+        /* INFO BOX */
+        .info-box { background: #0a1828; border: 1px solid #1a3a5c; border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
+        .info-box p { font-size: 11px; color: #6a90c0; line-height: 1.6; }
+
+        /* EARNINGS CALC specific */
+        .earnings-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .earnings-table th { background: #0f1117; color: #6b7a99; padding: 8px; text-align: left; font-weight: 600; }
+        .earnings-table td { padding: 8px; border-bottom: 1px solid #1a2035; color: #c0ccee; }
+        .earnings-table tr:last-child td { border-bottom: none; }
+        .earnings-table .highlight-row td { color: #4ade80; font-weight: 700; background: rgba(74,222,128,0.05); }
+
+        /* ENHANCED UI */
+        a { color: inherit; text-decoration: none; }
+        button, input, select { font-family: inherit; }
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 2px solid rgba(120,160,255,0.6);
+            outline-offset: 2px;
+        }
+        .card { transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+        .card:hover { transform: translateY(-1px); border-color: rgba(120,160,255,0.35); }
+        .btn-secondary {
+            background: rgba(120, 160, 255, 0.14);
+            color: #c7d8ff;
+            border: 1px solid rgba(120,160,255,0.35);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-secondary:active { opacity: 0.8; }
+        .btn-ghost {
+            background: transparent;
+            border: 1px dashed rgba(120,160,255,0.35);
+            color: #9fb4ea;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .section-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .kpi-card {
+            background: rgba(10, 16, 28, 0.7);
+            border: 1px solid rgba(120, 160, 255, 0.2);
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .kpi-card small {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-muted);
+        }
+        .kpi-card b { display: block; font-size: 16px; margin-top: 4px; color: #e6ecff; }
+        .inline-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        .inline-actions button { flex: 1 1 130px; }
+        .journey-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .journey-step {
+            background: rgba(10,16,28,0.6);
+            border: 1px solid rgba(120,160,255,0.18);
+            border-radius: 14px;
+            padding: 12px;
+            display:flex;
+            gap:10px;
+            align-items:flex-start;
+        }
+        .journey-step i { font-size: 16px; color: #90b8ff; margin-top: 2px; }
+        .journey-step p { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+        .thumb-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+        .thumb-strip::-webkit-scrollbar { display: none; }
+        .thumb-strip img {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(120,160,255,0.25);
+        }
+        .details-card details {
+            background: rgba(10,16,28,0.6);
+            border: 1px solid rgba(120,160,255,0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .details-card details + details { margin-top: 8px; }
+        .details-card summary { cursor: pointer; font-weight: 600; color: #b4c5ff; }
+        .details-card summary::-webkit-details-marker { display: none; }
+        .details-card p { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .poster-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        .poster-card {
+            background: var(--card-bg);
+            border: 1px solid #2a3050;
+            border-radius: 16px;
+            padding: 12px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        }
+        .poster-card img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(120,160,255,0.2);
+        }
+        .poster-actions { display:flex; gap:8px; }
+        .poster-actions button { flex:1 1 120px; }
+        .link-card {
+            background: var(--card-bg);
+            border: 1px solid #2a3050;
+            border-radius: 14px;
+            padding: 12px 14px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .link-card:active { background:#232a45; }
+        .link-card p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .empty-state { text-align:center; color:#5a6a99; padding:24px 0; }
+        .chip {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            background: rgba(120,160,255,0.16);
+            color:#c7d8ff;
+            border:1px solid rgba(120,160,255,0.3);
+            border-radius:999px;
+            padding: 4px 10px;
+            font-size:10px;
+            font-weight:700;
+            letter-spacing:0.3px;
+        }
+        .checklist {
+            list-style: none;
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .checklist li {
+            background: rgba(10,16,28,0.6);
+            border:1px solid rgba(120,160,255,0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display:flex;
+            gap:8px;
+            align-items:flex-start;
+        }
+        .checklist li i { color: #4ade80; margin-top: 2px; }
+        .search-card {
+            background: var(--surface);
+            border:1px solid rgba(120,160,255,0.2);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+        @media (min-width: 720px) {
+            .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+            .journey-grid { grid-template-columns: repeat(3, 1fr); }
+            .grid-2 { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .poster-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * { scroll-behavior: auto !important; transition: none !important; }
+        }
+        .tool-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .tool-card-modern {
+            background: rgba(20, 26, 43, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(140, 170, 255, 0.25);
+            border-radius: 18px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .tool-card-modern:active { transform: scale(0.97); background: rgba(120, 160, 255, 0.1); }
+        .tool-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .tool-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+        .tool-card-info strong {
+            font-size: 14px;
+            color: #e0e6ff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tool-card-info span {
+            font-size: 10px;
+            color: #7a8fcc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        @media (min-width: 720px) {
+            .tool-grid-modern { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <nav class="header">
+        <button class="logo-brand" onclick="showView('home')">
+            <img src="data:image/jpeg;base64,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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/xAAC/9oADAMBAAIAAwAAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUe9vIU7+o8gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASwGVE72nQhZG3yKEAAAAAAAQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADk4mV3HSCmeVhnT4APf8A5444yqAEIAAMAAAAAAA3RAAAAAAAAAAAAAAAAAAAAAAAASnkb4ZZifHOuRt8ATBBf+jQPK71LCFgAAAAAAAMpoAAAAAAAAAAAAAAAAAAAAAAAnGuvx9wPb2kkpPDAU+ozzg9A2bDYf8AQAGNB7pwN7KTmRYgxOLDfDgAAAAAAAAAAABCjXu+Wr/NZIe14ABwQwxwJWO/a0pP+v7Hm05be3kq6wcPgi0+/OgAAAAAAAAAAAGUIjxzcJqnh4Oh4wADcIVSCxSi/YkURwDD6U7DoIq4SHEeQbWwr7wAAAAAAAAAAAPpk8A09PHEtFoBwwBplgYYa24cjoUSkAGdwRXqT5Qa32XqkCawHKwAAAAAAAAAAAMJrHMz1BMNK/7mCQAZpAAAP5iGxmkBnAKDk49kT7oeVJmNw4oQO6QAAAAAAAAAAAAoph48MXFNdffhwAE/WgAANLARspqUeKJaWeswTgMa3IU0whIQD3wAAAAAAAAAAAAJjzvGpoBuh1gOgAAAAAAAAAAAAAAAAAKKCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEMwi+1yMt/wCmOAAAAAAAAAAAAAAAAAACU6gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADOprgyQxXsOkAAAgARAASggwCjQAQggAwAgwgjwgwCQghSSgwAAAAAAAAAAAAAAAADEFNxdQ9WMAAACShSQhRwzDQCBwzxQSBRRGCjShAiSDwDgDSgAAAAAAAAAAAAAAAAAS+hqbKIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMZAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/xAAC/9oADAMBAAIAAwAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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" alt="Fittplan" class="logo-img">
+            <span class="logo-text">Fittplan</span>
+        </button>
+        <div class="nav-icons">
+            <button onclick="showView('tools')"><i class="fas fa-th-large"></i></button>
+            <button onclick="showView('profile')"><i class="fas fa-user-circle"></i></button>
+        </div>
+    </nav>
+
+    <!-- PDF Viewer Overlay -->
+    <div id="pdf-viewer-overlay" class="pdf-viewer-overlay hidden">
+        <div class="pdf-viewer-header">
+            <span id="pdf-viewer-title">Form</span>
+            <button class="pdf-btn" onclick="downloadCurrentPDF()"><i class="fas fa-download"></i> Save</button>
+            <button class="pdf-btn" onclick="closePDFViewer()"><i class="fas fa-times"></i> Close</button>
+        </div>
+        <iframe id="pdf-iframe" src=""></iframe>
+    </div>
+
+    <!-- Video Player Overlay -->
+    <div id="video-player-overlay" class="video-player-overlay hidden">
+        <div class="video-player-header">
+            <span id="video-player-title">Video</span>
+            <button class="pdf-btn" onclick="closeVideoPlayer()"><i class="fas fa-times"></i> Close</button>
+        </div>
+        <div class="video-player-body">
+            <video id="local-video-player" controls controlsList="nodownload" playsinline preload="metadata">
+                Your browser does not support the video tag.
+            </video>
+            <p class="video-player-sub" id="video-player-sub"></p>
+        </div>
+    </div>
+
+    <!-- YouTube Player Overlay -->
+    <div id="youtube-player-overlay" class="video-player-overlay hidden">
+        <div class="video-player-header">
+            <span id="youtube-player-title">YouTube</span>
+            <button class="pdf-btn" onclick="closeYouTubePlayer()"><i class="fas fa-times"></i> Close</button>
+        </div>
+        <div class="video-player-body">
+            <iframe id="youtube-iframe" title="YouTube Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;border-radius:12px;background:#000;"></iframe>
+            <p class="video-player-sub" id="youtube-player-sub"></p>
+        </div>
+    </div>
+
+    <main>
+
+        <!-- ========== HOME ========== -->
+        <div id="view-home">
+            <div class="hero">
+                <div class="hero-title">Your FitPlan Command Center</div>
+                <div class="hero-sub">Plan faster, share cleaner, and keep every client asset in one place. Jump straight into tools, documents, or the media library.</div>
+                <div class="hero-actions">
+                    <button class="btn-primary" onclick="showView('tools')"><i class="fas fa-bolt" style="margin-right:6px;"></i>Open Tools</button>
+                    <button class="btn-green" onclick="showView('library')"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Resource Library</button>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-chip"><b>Forms</b><span>Instant PDF access</span></div>
+                    <div class="stat-chip"><b>Brochures</b><span>Ready-to-share docs</span></div>
+                    <div class="stat-chip"><b>Videos</b><span>YouTube + local</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title" style="margin:0;">Today&#39;s Snapshot</div>
+                        <div class="section-sub">Top assets and quick actions for client meetings</div>
+                    </div>
+                    <small id="today-date"></small>
+                </div>
+                <div class="kpi-grid" id="home-kpi-grid"></div>
+                <div class="inline-actions">
+                    <button class="btn-secondary" onclick="showView('forms-section')"><i class="fas fa-file-lines" style="margin-right:6px;"></i>Forms</button>
+                    <button class="btn-secondary" onclick="showView('brochures-section')"><i class="fas fa-book-open" style="margin-right:6px;"></i>Brochures</button>
+                    <button class="btn-secondary" onclick="showView('plan-videos')"><i class="fas fa-play" style="margin-right:6px;"></i>Videos</button>
+                    <button class="btn-secondary" onclick="showView('library')"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Library</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Client Journey</div>
+                    <small>Simple 3-step flow to close faster</small>
+                </div>
+                <div class="journey-grid">
+                    <div class="journey-step">
+                        <i class="fas fa-clipboard-check"></i>
+                        <div>
+                            <strong>Assess Needs</strong>
+                            <p>Capture income, liabilities, and goals to recommend the right cover.</p>
+                        </div>
+                    </div>
+                    <div class="journey-step">
+                        <i class="fas fa-shield-halved"></i>
+                        <div>
+                            <strong>Match Plans</strong>
+                            <p>Compare brochures, benefits, and riders in one organized library.</p>
+                        </div>
+                    </div>
+                    <div class="journey-step">
+                        <i class="fas fa-paper-plane"></i>
+                        <div>
+                            <strong>Share & Track</strong>
+                            <p>Send PDFs, save estimates, and keep history for follow-ups.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Featured Assets</div>
+                    <small>Tap to open</small>
+                </div>
+                <div class="thumb-strip" id="home-featured-strip"></div>
+            </div>
+            <div class="card" style="margin-bottom:16px;">
+                <div style="margin-bottom:14px;">
+                    <p class="input-label">CLIENT NAME</p>
+                    <input type="text" id="name" class="dark-input" placeholder="e.g. Kiran Sharma">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div>
+                        <p class="input-label">AGE</p>
+                        <input type="number" id="age" value="30" min="1" max="100" class="dark-input">
+                    </div>
+                    <div>
+                        <p class="input-label">SELECT PLAN</p>
+                        <select id="plan" class="dark-select" onchange="updateTerms()">
+                            <option value="914">New Endowment (914)</option>
+                            <option value="915">New Jeevan Anand (915)</option>
+                            <option value="933">Jeevan Lakshya (933)</option>
+                            <option value="936">Jeevan Labh (936)</option>
+                            <option value="943">Aadhaar Stambh (943)</option>
+                            <option value="944">Aadhaar Shila (944)</option>
+                            <option value="945">Jeevan Umang (945)</option>
+                            <option value="947">Jeevan Shiromani (947)</option>
+                            <option value="948">Bima Shree (948)</option>
+                            <option value="951">Jeevan Amar (951)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                    <div>
+                        <p class="input-label">TERM (YEARS)</p>
+                        <select id="term" class="dark-select">
+                            <option value="25">25 Years</option>
+                            <option value="21">21 Years</option>
+                            <option value="16">16 Years</option>
+                        </select>
+                    </div>
+                    <div>
+                        <p class="input-label">SUM ASSURED (₹)</p>
+                        <input type="number" id="sa" value="1000000" min="0" class="dark-input">
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="calculate()"><i class="fas fa-bolt" style="margin-right:6px;"></i>CALCULATE & SAVE</button>
+            </div>
+
+            <div id="results" class="hidden">
+                <div class="result-highlight">
+                    <p class="result-label">MATURITY BENEFIT</p>
+                    <p class="result-value" id="res-maturity">₹0</p>
+                </div>
+                <div class="card">
+                    <p style="font-size:13px;font-weight:700;color:#7a8fcc;margin-bottom:12px;">SUMMARY — <span id="res-client-name" style="color:#b4c5ff;"></span></p>
+                    <div class="result-row"><span>Sum Assured</span><span id="res-sa">₹0</span></div>
+                    <div class="result-row"><span>Estimated Bonus</span><span id="res-bonus">₹0</span></div>
+                    <div class="result-row" style="border-bottom:none;"><span style="font-weight:700;color:#e0e6ff;">Total Premium Paid</span><span id="res-total-prem" style="color:#f39c12;">₹0</span></div>
+                </div>
+                <button class="btn-red" onclick="downloadPDF()" style="margin-bottom:16px;"><i class="fas fa-file-pdf" style="margin-right:6px;"></i>Download Summary PDF</button>
+            </div>
+
+            <div class="card details-card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">FAQs & Quick Tips</div>
+                    <small>Common client questions answered</small>
+                </div>
+                <details>
+                    <summary>How do I choose the right sum assured?</summary>
+                    <p>Start with income replacement (10-15 years), then add liabilities and goal funding. Use the Need Analysis tool for a quick estimate.</p>
+                </details>
+                <details>
+                    <summary>Which documents should I carry for onboarding?</summary>
+                    <p>Basic KYC, income proof, age proof, and recent photo are usually enough to start. Keep digital copies ready to share.</p>
+                </details>
+                <details>
+                    <summary>Can I share brochures directly?</summary>
+                    <p>Yes. Open any brochure and tap Save to download or share via your preferred app.</p>
+                </details>
+            </div>
+        </div>
+
+        <!-- ========== TOOLS ========== -->
+        <div id="view-tools" class="hidden">
+            <p class="section-title">Sales & Financial Suite</p>
+            <div class="tool-grid-modern">
+                <div class="tool-card-modern" onclick="showView('needs-analysis')">
+                    <div class="tool-card-icon" style="background:rgba(93,212,255,0.1);color:#5dd4ff;"><i class="fas fa-chart-pie"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Need Analysis</strong>
+                        <span>Coverage Planner</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('poster-builder')">
+                    <div class="tool-card-icon" style="background:rgba(243,156,18,0.1);color:#f39c12;"><i class="fas fa-wand-magic-sparkles"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Magic Poster</strong>
+                        <span>Custom Marketing</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('posters')">
+                    <div class="tool-card-icon" style="background:rgba(180,197,255,0.1);color:#b4c5ff;"><i class="fas fa-image"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Gallery</strong>
+                        <span>Ready Posters</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('library')">
+                    <div class="tool-card-icon" style="background:rgba(93,184,122,0.1);color:#5db87a;"><i class="fas fa-layer-group"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Resource Hub</strong>
+                        <span>All Documents</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('earnings-calc')">
+                    <div class="tool-card-icon" style="background:rgba(255,212,93,0.1);color:#ffd45d;"><i class="fas fa-coins"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Earnings</strong>
+                        <span>Commission Calc</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('revival-calc')">
+                    <div class="tool-card-icon" style="background:rgba(255,93,122,0.1);color:#ff5d7a;"><i class="fas fa-clock-rotate-left"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Revival</strong>
+                        <span>Late Fee Estimator</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('forms-section')">
+                    <div class="tool-card-icon" style="background:rgba(180,197,255,0.1);color:#b4c5ff;"><i class="fas fa-file-invoice"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Forms</strong>
+                        <span id="forms-count-new">Proposal Forms</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('brochures-section')">
+                    <div class="tool-card-icon" style="background:rgba(180,197,255,0.1);color:#b4c5ff;"><i class="fas fa-book-open"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Brochures</strong>
+                        <span id="brochures-count-new">Plan Details</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('useful-links')">
+                    <div class="tool-card-icon" style="background:rgba(224,230,255,0.1);color:#e0e6ff;"><i class="fas fa-link"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Useful Links</strong>
+                        <span>LIC Portals</span>
+                    </div>
+                </div>
+                <div class="tool-card-modern" onclick="showView('withdrawn-plans')">
+                    <div class="tool-card-icon" style="background:rgba(255,93,93,0.1);color:#ff5d5d;"><i class="fas fa-ban"></i></div>
+                    <div class="tool-card-info">
+                        <strong>Withdrawn</strong>
+                        <span>Historic Plans</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="section-title">Utility Tools</p>
+            <div class="tools-scroll" style="margin-bottom:20px;">
+                <div class="tool-tile" onclick="showView('age-tool')">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Age Calc</span>
+                </div>
+                <div class="tool-tile" onclick="showView('income-tool')">
+                    <i class="fas fa-receipt"></i>
+                    <span>Tax Tool</span>
+                </div>
+                <div class="tool-tile" onclick="showView('media-tool')">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Img to PDF</span>
+                </div>
+            </div>
+
+            <p class="section-title">Video Resources</p>
+            <div style="margin-bottom:10px;">
+                <div class="video-item" onclick="showView('plan-videos')">
+                    <div class="video-left">
+                        <div class="video-icon" style="background:linear-gradient(135deg,#1a3a8f,#2a5abf);">
+                            <i class="fas fa-play" style="color:white;font-size:16px;margin-left:3px;"></i>
+                        </div>
+                        <div>
+                            <p class="video-title">Plan Videos</p>
+                            <p class="video-sub">LIC Plan explanations</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#4a5580;font-size:13px;"></i>
+                </div>
+                <div class="video-item" onclick="showView('concept-videos')">
+                    <div class="video-left">
+                        <div class="video-icon" style="background:linear-gradient(135deg,#3a1a7a,#5a2abf);">
+                            <i class="fas fa-lightbulb" style="color:white;font-size:16px;"></i>
+                        </div>
+                        <div>
+                            <p class="video-title">Concept Videos</p>
+                            <p class="video-sub">Insurance concepts explained</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#4a5580;font-size:13px;"></i>
+                </div>
+                <div class="video-item" onclick="showView('help-videos')">
+                    <div class="video-left">
+                        <div class="video-icon" style="background:linear-gradient(135deg,#1a6a3a,#2a9a5a);">
+                            <i class="fas fa-circle-question" style="color:white;font-size:16px;"></i>
+                        </div>
+                        <div>
+                            <p class="video-title">Help Videos</p>
+                            <p class="video-sub">How-to guides & support</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#4a5580;font-size:13px;"></i>
+                </div>
+                <div class="video-item" onclick="showView('training-videos')">
+                    <div class="video-left">
+                        <div class="video-icon" style="background:linear-gradient(135deg,#6a3a1a,#bf5a2a);">
+                            <i class="fas fa-chalkboard-user" style="color:white;font-size:16px;"></i>
+                        </div>
+                        <div>
+                            <p class="video-title">Training Videos</p>
+                            <p class="video-sub">Agent training & skills</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#4a5580;font-size:13px;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== NEED ANALYSIS ========== -->
+        <div id="view-needs-analysis" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Need Analysis</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Quick coverage estimate for protection planning</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Coverage Inputs</div>
+                    <small>Update values for your client</small>
+                </div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">MONTHLY INCOME (₹)</p>
+                        <input type="number" id="need-income" class="dark-input" value="60000" min="0">
+                    </div>
+                    <div>
+                        <p class="input-label">INCOME REPLACEMENT (YEARS)</p>
+                        <select id="need-years" class="dark-select">
+                            <option value="10">10 Years</option>
+                            <option value="12">12 Years</option>
+                            <option value="15">15 Years</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">TOTAL LIABILITIES (₹)</p>
+                        <input type="number" id="need-liabilities" class="dark-input" value="500000" min="0">
+                    </div>
+                    <div>
+                        <p class="input-label">EXISTING LIFE COVER (₹)</p>
+                        <input type="number" id="need-existing" class="dark-input" value="0" min="0">
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">EDUCATION / GOALS FUND (₹)</p>
+                        <input type="number" id="need-goals" class="dark-input" value="300000" min="0">
+                    </div>
+                    <div>
+                        <p class="input-label">EMERGENCY BUFFER (MONTHS)</p>
+                        <select id="need-buffer" class="dark-select">
+                            <option value="6">6 Months</option>
+                            <option value="9">9 Months</option>
+                            <option value="12">12 Months</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="calcNeeds()">CALCULATE COVER</button>
+            </div>
+
+            <div id="needs-results" class="hidden">
+                <div class="result-highlight" style="margin-top:4px;">
+                    <p class="result-label">SUGGESTED LIFE COVER</p>
+                    <p class="result-value" id="need-total">₹0</p>
+                </div>
+                <div class="card">
+                    <div class="result-row"><span>Annual Income</span><span id="need-annual">₹0</span></div>
+                    <div class="result-row"><span>Income Replacement</span><span id="need-income-cover">₹0</span></div>
+                    <div class="result-row"><span>Liabilities</span><span id="need-liab-show">₹0</span></div>
+                    <div class="result-row"><span>Goals Fund</span><span id="need-goals-show">₹0</span></div>
+                    <div class="result-row"><span>Emergency Buffer</span><span id="need-buffer-show">₹0</span></div>
+                    <div class="result-row" style="border-bottom:none;"><span style="font-weight:700;color:#e0e6ff;">Existing Cover</span><span id="need-existing-show" style="color:#f59e0b;">- ₹0</span></div>
+                </div>
+                <div class="card">
+                    <div class="section-title" style="margin:0;">Onboarding Checklist</div>
+                    <ul class="checklist">
+                        <li><i class="fas fa-circle-check"></i>Identity & address proof (KYC)</li>
+                        <li><i class="fas fa-circle-check"></i>Income proof or bank statement</li>
+                        <li><i class="fas fa-circle-check"></i>Nominee details & relationship proof</li>
+                        <li><i class="fas fa-circle-check"></i>Medical reports (if applicable)</li>
+                    </ul>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-circle-info" style="color:#4a7aaa;font-size:14px;margin-top:2px;"></i>
+                    <p>This is a planning estimate. Final cover depends on underwriting, plan eligibility, and client objectives.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== POSTERS ========== -->
+        <div id="view-posters" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Poster Gallery</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Ready-to-share marketing assets</p>
+                </div>
+            </div>
+            <div class="poster-grid" id="poster-gallery"></div>
+            <div class="info-box">
+                <i class="fas fa-circle-info" style="color:#4a7aaa;font-size:14px;margin-top:2px;"></i>
+                <p>Tap Download to save an image locally. Use the Magic Poster tool to customize your own.</p>
+            </div>
+        </div>
+
+        <!-- ========== MAGIC POSTER ========== -->
+        <div id="view-poster-builder" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Magic Poster</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Create a branded poster in seconds</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Poster Details</div>
+                    <small>Live preview updates automatically</small>
+                </div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">HEADLINE</p>
+                        <input type="text" id="poster-headline" class="dark-input" value="Secure Your Family&#39;s Future">
+                    </div>
+                    <div>
+                        <p class="input-label">SUBLINE</p>
+                        <input type="text" id="poster-subline" class="dark-input" value="Smart protection and long-term savings plans">
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">OFFER TAG</p>
+                        <input type="text" id="poster-tag" class="dark-input" value="Free Consultation">
+                    </div>
+                    <div>
+                        <p class="input-label">THEME</p>
+                        <select id="poster-theme" class="dark-select">
+                            <option value="ocean">Ocean Blue</option>
+                            <option value="sunset">Sunset Gold</option>
+                            <option value="emerald">Emerald Green</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2" style="margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">AGENT NAME</p>
+                        <input type="text" id="poster-agent" class="dark-input" value="Your Name">
+                    </div>
+                    <div>
+                        <p class="input-label">CONTACT NUMBER</p>
+                        <input type="text" id="poster-phone" class="dark-input" value="+91 98XXXXXX">
+                    </div>
+                </div>
+                <div class="inline-actions">
+                    <button class="btn-primary" onclick="generatePoster()">UPDATE PREVIEW</button>
+                    <button class="btn-secondary" onclick="downloadPoster()">DOWNLOAD SVG</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Preview</div>
+                    <small>High resolution SVG</small>
+                </div>
+                <img id="poster-preview-img" alt="Poster preview" style="width:100%;border-radius:16px;border:1px solid rgba(120,160,255,0.2);">
+            </div>
+        </div>
+
+        <!-- ========== USEFUL LINKS ========== -->
+        <div id="view-useful-links" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:18px;font-weight:600;color:#e0e6ff;">Links</h2>
+            </div>
+            <div style="margin-bottom:20px;">
+                <p style="font-size:13px;color:#e0e6ff;line-height:1.5;">Note: The following links point to LIC's official websites. This app is an independent tool created for training purposes only, and is not affiliated with, endorsed by, or representative of LIC or any government entity. These links are included only for user convenience.</p>
+            </div>
+            <div id="useful-links-list" style="margin-top:20px;"></div>
+        </div>
+
+        <style>
+            .wp-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #4a5580; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+            .wp-table th, .wp-table td { border-bottom: 1px solid #4a5580; border-right: 1px solid #4a5580; padding: 8px 10px; font-size: 14px; color: #e0e6ff; text-align: center; line-height:1.4; }
+            .wp-table tr:last-child td { border-bottom: none; }
+            .wp-table td:last-child { border-right: none; }
+            .wp-table td:first-child { font-weight: 600; background: #232333; text-align: center; width: 45%; color: #b4c5ff; }
+            .wp-table td:last-child { background: #1a1a24; }
+            .wp-header { background: #3c426b; color:#fff; font-weight:600; font-size:15px; text-align:center; padding: 8px 0; border:1px solid #4a5580;border-top-left-radius: 12px; border-top-right-radius: 12px; margin-bottom:0 !important; }
+            .wp-body { background: #232333; border:1px solid #4a5580; border-top: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; padding: 12px 14px; margin-bottom: 20px;}
+            .wp-body ul { list-style: none; margin:0; padding:0; }
+            .wp-body ul li { position: relative; padding-left: 18px; margin-bottom: 8px; font-size: 14px; color:#c7d8ff; line-height: 1.4; text-align:left; }
+            .wp-body ul li:last-child { margin-bottom: 0; }
+            .wp-body ul li::before { content: "\25A0"; position: absolute; left: 0; top: 0; color: #f5a6b0; font-size: 12px; }
+            .wp-pattern { background: #3c426b; padding: 10px; text-align:center; border:1px solid #4a5580; border-top-left-radius:12px; border-top-right-radius:12px; line-height: 1.4; margin-bottom:0 !important;}
+        </style>
+
+        <!-- ========== WITHDRAWN PLANS ========== -->
+        <div id="view-withdrawn-plans" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:18px;font-weight:600;color:#e0e6ff;">Withdrawn Plans - Report</h2>
+            </div>
+            <div id="withdrawn-plans-directory"></div>
+        </div>
+
+        <!-- ========== WITHDRAWN PLANS REPORT ========== -->
+        <div id="view-withdrawn-plan-report" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('withdrawn-plans')" style="background:none;border:none;color:#e0e6ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:18px;font-weight:600;color:#ffffff;">Withdrawn Plans - Report</h2>
+            </div>
+            <div id="withdrawn-report-container"></div>
+        </div>
+
+        <!-- ========== LIBRARY ========== -->
+        <div id="view-library" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:18px;font-weight:700;color:#e6ecff;">Resource Library</h2>
+                    <p style="font-size:11px;color:#7b8bb6;">All forms, brochures, videos, and images in one place</p>
+                </div>
+            </div>
+
+            <div class="search-card">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Search Library</div>
+                    <small>Filter by title</small>
+                </div>
+                <input type="text" id="library-search" class="dark-input" placeholder="Search forms, brochures, resources, videos..." oninput="renderLibrary(this.value)">
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="section-header">
+                    <div class="section-title" style="margin:0;">Quick Access</div>
+                    <small>Tap any item to preview</small>
+                </div>
+                <div class="resource-grid" id="library-quick"></div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title" style="margin:0;">Forms & Brochures (PDF)</div>
+                <small>Ready to share or download</small>
+            </div>
+            <div class="resource-grid" id="library-docs" style="margin-bottom:16px;"></div>
+
+            <div class="section-header">
+                <div class="section-title" style="margin:0;">Resources & Guides (PDF)</div>
+                <small>Reference charts and guides</small>
+            </div>
+            <div class="resource-grid" id="library-resources" style="margin-bottom:16px;"></div>
+
+            <div class="section-header">
+                <div class="section-title" style="margin:0;">Editable Docs (DOCX)</div>
+                <small>Download and edit</small>
+            </div>
+            <div class="resource-grid" id="library-docx" style="margin-bottom:16px;"></div>
+
+            <div class="section-header">
+                <div class="section-title" style="margin:0;">YouTube Video Links</div>
+                <small>Open in-app player</small>
+            </div>
+            <div class="resource-grid" id="library-videos" style="margin-bottom:16px;"></div>
+
+            <div class="section-header">
+                <div class="section-title" style="margin:0;">Image Gallery</div>
+                <small>Add images from your device</small>
+            </div>
+            <div class="card">
+                <div class="media-grid">
+                    <div class="media-thumb">
+                        <i class="fas fa-image" style="font-size:20px;margin-bottom:6px;display:block;"></i>
+                        Images loaded from /images.
+                    </div>
+                    <div class="media-thumb">
+                        <label style="cursor:pointer;display:block;">
+                            <i class="fas fa-upload" style="font-size:18px;margin-bottom:6px;display:block;"></i>
+                            Upload images (local preview)
+                            <input type="file" id="library-image-upload" accept="image/*" multiple style="display:none;">
+                        </label>
+                    </div>
+                </div>
+                <div class="thumb-grid" id="library-image-grid" style="margin-top:12px;"></div>
+            </div>
+        </div>
+
+        <!-- ========== EARNINGS CALCULATOR ========== -->
+        <div id="view-earnings-calc" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Earnings Calculator</h2>
+                    <p style="font-size:11px;color:#5a6a99;">LIC Agent Commission Estimator</p>
+                </div>
+            </div>
+            <div class="card">
+                <div style="margin-bottom:12px;">
+                    <p class="input-label">ANNUAL PREMIUM (₹)</p>
+                    <input type="number" id="earn-premium" class="dark-input" value="100000" min="0" placeholder="e.g. 100000">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">PLAN TYPE</p>
+                        <select id="earn-plan-type" class="dark-select">
+                            <option value="endowment">Endowment / Money Back</option>
+                            <option value="term">Term Plan</option>
+                            <option value="annuity">Annuity Plan</option>
+                            <option value="ulip">ULIP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <p class="input-label">POLICY YEAR</p>
+                        <select id="earn-year" class="dark-select">
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="renewal">Renewal (4+)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <p class="input-label">NUMBER OF POLICIES</p>
+                    <input type="number" id="earn-count" class="dark-input" value="1" min="1">
+                </div>
+                <button class="btn-primary" onclick="calcEarnings()">CALCULATE EARNINGS</button>
+            </div>
+            <div id="earn-results" class="hidden">
+                <div class="result-highlight" style="margin-top:4px;">
+                    <p class="result-label">ESTIMATED EARNINGS</p>
+                    <p class="result-value" id="earn-total">₹0</p>
+                </div>
+                <div class="card">
+                    <p style="font-size:11px;font-weight:700;color:#7a8fcc;margin-bottom:10px;">EARNINGS BREAKDOWN</p>
+                    <table class="earnings-table">
+                        <thead><tr><th>Component</th><th>Rate</th><th>Amount</th></tr></thead>
+                        <tbody id="earn-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-circle-info" style="color:#4a7aaa;font-size:14px;margin-top:2px;"></i>
+                    <p>Commission rates are indicative. Actual rates depend on LIC circulars, agent category, and bonus commissions. HLA/club membership may offer higher rates.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== REVIVAL LATE FEE ========== -->
+        <div id="view-revival-calc" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Revival Late Fee</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Estimate interest on lapsed policy revival</p>
+                </div>
+            </div>
+            <div class="card">
+                <div style="margin-bottom:12px;">
+                    <p class="input-label">OVERDUE PREMIUM (₹)</p>
+                    <input type="number" id="rev-premium" class="dark-input" value="50000" min="0">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                    <div>
+                        <p class="input-label">DATE OF LAPSE</p>
+                        <input type="date" id="rev-lapse-date" class="dark-input">
+                    </div>
+                    <div>
+                        <p class="input-label">REVIVAL DATE</p>
+                        <input type="date" id="rev-revival-date" class="dark-input">
+                    </div>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <p class="input-label">INTEREST RATE (% p.a.)</p>
+                    <select id="rev-rate" class="dark-select">
+                        <option value="9">9% p.a. (Current LIC Rate)</option>
+                        <option value="8">8% p.a.</option>
+                        <option value="10">10% p.a.</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="calcRevival()">CALCULATE LATE FEE</button>
+            </div>
+            <div id="rev-results" class="hidden">
+                <div class="result-highlight" style="margin-top:4px;">
+                    <p class="result-label">TOTAL AMOUNT PAYABLE</p>
+                    <p class="result-value" id="rev-total">₹0</p>
+                </div>
+                <div class="card">
+                    <div class="result-row"><span>Overdue Premium</span><span id="rev-prem-show">₹0</span></div>
+                    <div class="result-row"><span>Lapsed Duration</span><span id="rev-duration">0 days</span></div>
+                    <div class="result-row"><span>Interest Rate</span><span id="rev-rate-show">9%</span></div>
+                    <div class="result-row" style="border-bottom:none;"><span>Interest Amount</span><span id="rev-interest" style="color:#f39c12;">₹0</span></div>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-circle-info" style="color:#4a7aaa;font-size:14px;margin-top:2px;"></i>
+                    <p>This is an estimate. Actual revival amount may vary. Contact your LIC branch for exact figures. Medical evidence may also be required.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== AGE TOOL ========== -->
+        <div id="view-age-tool" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Age Calculator</h2>
+            </div>
+            <div class="card">
+                <p class="input-label" style="margin-bottom:8px;">DATE OF BIRTH</p>
+                <input type="date" id="dob-input" class="dark-input" style="margin-bottom:14px;">
+                <button class="btn-primary" onclick="calcAge()">CALCULATE AGE</button>
+            </div>
+            <div id="age-result-box" class="hidden result-highlight" style="margin-top:4px;">
+                <p class="result-label">YOUR EXACT AGE</p>
+                <p class="result-value" id="age-years-big">0 Yrs</p>
+                <p id="age-detail" style="color:#5db87a;font-size:13px;margin-top:6px;"></p>
+            </div>
+        </div>
+
+        <!-- ========== INCOME TOOL ========== -->
+        <div id="view-income-tool" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Income Tax Estimator</h2>
+            </div>
+            <div class="card">
+                <p class="input-label" style="margin-bottom:8px;">MONTHLY GROSS SALARY (₹)</p>
+                <input type="number" id="monthly-income" class="dark-input" value="50000" min="0" style="margin-bottom:14px;">
+                <button class="btn-primary" onclick="calcIncome()">CALCULATE TAX</button>
+            </div>
+            <div id="income-res" class="hidden" style="margin-top:4px;">
+                <div class="card">
+                    <div class="result-row"><span>Annual Income</span><span id="ann-inc">₹0</span></div>
+                    <div class="result-row"><span>Standard Deduction</span><span style="color:#4ade80;">- ₹50,000</span></div>
+                    <div class="result-row"><span>Est. Tax (Old Regime)</span><span id="est-tax" style="color:#f87171;">₹0</span></div>
+                    <div class="result-row" style="border-bottom:none;"><span style="font-weight:700;color:#e0e6ff;">Monthly Take-Home</span><span id="take-home" style="color:#4ade80;font-weight:700;">₹0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== MEDIA TOOL ========== -->
+        <div id="view-media-tool" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Image Utilities</h2>
+            </div>
+            <div class="card">
+                <p class="input-label" style="margin-bottom:8px;">SELECT AN IMAGE</p>
+                <input type="file" id="media-upload" accept="image/*" style="color:#b4c5ff;margin-bottom:14px;width:100%;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <button class="btn-red" onclick="processImage('pdf')"><i class="fas fa-file-pdf" style="margin-right:6px;"></i>To PDF</button>
+                    <button class="btn-green" onclick="processImage('compress')"><i class="fas fa-compress" style="margin-right:6px;"></i>Compress</button>
+                </div>
+                <p id="media-status" style="margin-top:10px;font-size:12px;text-align:center;color:#b4c5ff;min-height:20px;"></p>
+            </div>
+            <canvas id="compress-canvas" class="hidden"></canvas>
+        </div>
+
+                <!-- ========== FORMS SECTION ========== -->
+        <div id="view-forms-section" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">LIC Proposal Forms</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Tap to view - Press Save to download</p>
+                </div>
+            </div>
+            <div class="search-card">
+                <p class="input-label">SEARCH FORMS</p>
+                <input type="text" id="forms-search" class="dark-input" placeholder="Type plan number or name" oninput="renderForms(this.value)">
+            </div>
+            <div id="forms-list"></div>
+            <div class="info-box">
+                <i class="fas fa-circle-info" style="color:#4a7aaa;font-size:14px;margin-top:2px;"></i>
+                <p>All forms are official LIC India proposal forms. Fill in BLOCK LETTERS only. White ink corrections are not allowed.</p>
+            </div>
+        </div>
+
+                <!-- ========== BROCHURES SECTION ========== -->
+        <div id="view-brochures-section" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">LIC Brochures</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Tap to view - Press Save to download</p>
+                </div>
+            </div>
+            <div class="search-card">
+                <p class="input-label">SEARCH BROCHURES</p>
+                <input type="text" id="brochures-search" class="dark-input" placeholder="Type plan number or rider name" oninput="renderBrochures(this.value)">
+            </div>
+            <div id="brochures-list"></div>
+        </div>
+
+<div id="view-plan-videos" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Plan Videos</h2>
+                    <p style="font-size:11px;color:#5a6a99;">LIC Plan explanations & details</p>
+                </div>
+            </div>
+            <div id="plan-videos-list"></div>
+        </div>
+
+        <div id="view-concept-videos" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Concept Videos</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Insurance concepts explained simply</p>
+                </div>
+            </div>
+            <div id="concept-videos-list"></div>
+        </div>
+
+        <div id="view-help-videos" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Help Videos</h2>
+                    <p style="font-size:11px;color:#5a6a99;">How-to guides & support</p>
+                </div>
+            </div>
+            <div id="help-videos-list"></div>
+        </div>
+
+        <div id="view-training-videos" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('tools')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <div>
+                    <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">Training Videos</h2>
+                    <p style="font-size:11px;color:#5a6a99;">Agent training & skill development</p>
+                </div>
+            </div>
+            <div id="training-videos-list"></div>
+        </div>
+
+        <!-- ========== PROFILE ========== -->
+        <div id="view-profile" class="hidden">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <button onclick="showView('home')" style="background:none;border:none;color:#b4c5ff;font-size:18px;cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+                <h2 style="font-size:17px;font-weight:700;color:#e0e6ff;">My Profile</h2>
+            </div>
+            <div style="background:#1a1c24;border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;">
+                <div style="position:relative;width:90px;height:90px;margin:0 auto 20px;">
+                    <div id="image-container" style="width:100%;height:100%;background:linear-gradient(135deg,#3db1c4,#2a7a8a);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid #3a4560;">
+                        <i id="default-icon" class="fas fa-user" style="font-size:42px;color:white;"></i>
+                        <img id="profile-img-display" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <label for="image-upload" style="position:absolute;bottom:0;right:0;background:#ff8a80;padding:7px;border-radius:50%;border:2px solid #1a1c24;cursor:pointer;">
+                        <i class="fas fa-pencil-alt" style="color:white;font-size:11px;"></i>
+                        <input type="file" id="image-upload" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                    </label>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <input type="text" id="prof-name" placeholder="Agent Name" class="profile-input">
+                    <input type="text" id="prof-address" placeholder="Branch / Address" class="profile-input">
+                    <input type="email" id="prof-email" placeholder="Email Address" class="profile-input">
+                    <input type="tel" id="prof-mobile" placeholder="Mobile Number" class="profile-input" maxlength="10">
+                    <button onclick="saveProfile()" class="save-btn">SAVE PROFILE</button>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+                        <button onclick="exportUserData()" style="background:#2a3050;color:#b4c5ff;padding:12px;border-radius:12px;border:1px solid #3a4560;font-size:12px;cursor:pointer;font-weight:600;"><i class="fas fa-file-export" style="margin-right:6px;"></i>Export JSON</button>
+                        <button onclick="document.getElementById('import-file').click()" style="background:#2a3050;color:#b4c5ff;padding:12px;border-radius:12px;border:1px solid #3a4560;font-size:12px;cursor:pointer;font-weight:600;"><i class="fas fa-file-import" style="margin-right:6px;"></i>Import JSON</button>
+                        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importUserData(event)">
+                    </div>
+                </div>
+            </div>
+            <p style="font-size:14px;font-weight:700;color:#e0e6ff;margin-bottom:12px;">Calculation History</p>
+            <div id="saved-list"></div>
+            <button onclick="clearAllData()" style="width:100%;background:none;border:1px solid #4a1a1a;color:#f87171;padding:12px;border-radius:12px;cursor:pointer;font-size:13px;margin-top:8px;margin-bottom:16px;">
+                <i class="fas fa-trash-can" style="margin-right:8px;"></i>Clear History
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <button id="nav-home" class="active" onclick="showView('home')"><i class="fas fa-home"></i>Home</button>
+        <button id="nav-tools" onclick="showView('tools')"><i class="fas fa-th-large"></i>Tools</button>
+        <button id="nav-forms" onclick="showView('forms-section')"><i class="fas fa-file-lines"></i>Forms</button>
+        <button id="nav-videos" onclick="showView('plan-videos')"><i class="fas fa-play-circle"></i>Videos</button>
+        <button id="nav-profile" onclick="showView('profile')"><i class="fas fa-user"></i>Profile</button>
+    </nav>
+
+    <script>
+    // ============ PDF DATA ============
+    const pdfForms = [
+        { title: '460 DGH', file: 'pdf/forms/460 DGH.pdf' },
+        { title: 'ArogyaRakshak ProposalForm906', file: 'pdf/forms/ArogyaRakshak_ProposalForm906.pdf' },
+        { title: 'Form 470 PMVVY Plan 856', file: 'pdf/forms/Form 470 PMVVY Plan 856.pdf' },
+        { title: 'Form 300', file: 'pdf/forms/Form_300.pdf' },
+        { title: 'NRI gst exemption409', file: 'pdf/forms/NRI_gst_exemption409.pdf' },
+        { title: 'Plan 849 Proposal Form', file: 'pdf/forms/Plan_849_Proposal_Form.pdf' },
+        { title: 'Plan 851 Form 504 Micro Bachat', file: 'pdf/forms/Plan_851_Form_504_Micro_Bachat.pdf' },
+        { title: 'Plan 852 Proposal Form', file: 'pdf/forms/Plan_852_Proposal_Form.pdf' },
+        { title: 'Plan 935 Proposal Form', file: 'pdf/forms/Plan_935_Proposal_Form.pdf' },
+        { title: 'eNachForm410 3783', file: 'pdf/forms/eNachForm410 3783.pdf' },
+        { title: 'form 340', file: 'pdf/forms/form_340.pdf' },
+        { title: 'form 360', file: 'pdf/forms/form_360.pdf' },
+        { title: 'form 440 akshay', file: 'pdf/forms/form_440_akshay.pdf' },
+        { title: 'form 441 shanti', file: 'pdf/forms/form_441_shanti.pdf' },
+        { title: 'form 443', file: 'pdf/forms/form_443.pdf' },
+        { title: 'form 867', file: 'pdf/forms/form_867.pdf' },
+        { title: 'form 873', file: 'pdf/forms/form_873.pdf' },
+        { title: 'form 905', file: 'pdf/forms/form_905.pdf' },
+        { title: 'saralPension Form442', file: 'pdf/forms/saralPension_Form442.pdf' }
+    ];
+
+    const pdfBrochures = [
+        { title: 'bro 714', file: 'pdf/brochure/bro_714.pdf' },
+        { title: 'bro 715', file: 'pdf/brochure/bro_715.pdf' },
+        { title: 'bro 717', file: 'pdf/brochure/bro_717.pdf' },
+        { title: 'bro 720', file: 'pdf/brochure/bro_720.pdf' },
+        { title: 'bro 721', file: 'pdf/brochure/bro_721.pdf' },
+        { title: 'bro 732', file: 'pdf/brochure/bro_732.pdf' },
+        { title: 'bro 733', file: 'pdf/brochure/bro_733.pdf' },
+        { title: 'bro 734', file: 'pdf/brochure/bro_734.pdf' },
+        { title: 'bro 735', file: 'pdf/brochure/bro_735.pdf' },
+        { title: 'bro 736', file: 'pdf/brochure/bro_736.pdf' },
+        { title: 'bro 745', file: 'pdf/brochure/bro_745.pdf' },
+        { title: 'bro 748', file: 'pdf/brochure/bro_748.pdf' },
+        { title: 'bro 749', file: 'pdf/brochure/bro_749.pdf' },
+        { title: 'bro 751', file: 'pdf/brochure/bro_751.pdf' },
+        { title: 'bro 758', file: 'pdf/brochure/bro_758.pdf' },
+        { title: 'bro 760', file: 'pdf/brochure/bro_760.pdf' },
+        { title: 'bro 764', file: 'pdf/brochure/bro_764.pdf' },
+        { title: 'bro 771', file: 'pdf/brochure/bro_771.pdf' },
+        { title: 'bro 774', file: 'pdf/brochure/bro_774.pdf' },
+        { title: 'bro 852', file: 'pdf/brochure/bro_852.pdf' },
+        { title: 'bro 854', file: 'pdf/brochure/bro_854.pdf' },
+        { title: 'bro 855', file: 'pdf/brochure/bro_855.pdf' },
+        { title: 'bro 857', file: 'pdf/brochure/bro_857.pdf' },
+        { title: 'bro 859', file: 'pdf/brochure/bro_859.pdf' },
+        { title: 'bro 862', file: 'pdf/brochure/bro_862.pdf' },
+        { title: 'bro 867', file: 'pdf/brochure/bro_867.pdf' },
+        { title: 'bro 868', file: 'pdf/brochure/bro_868.pdf' },
+        { title: 'bro 873', file: 'pdf/brochure/bro_873.pdf' },
+        { title: 'bro 880', file: 'pdf/brochure/bro_880.pdf' },
+        { title: 'bro 881', file: 'pdf/brochure/bro_881.pdf' },
+        { title: 'bro 883', file: 'pdf/brochure/bro_883.pdf' },
+        { title: 'bro 886', file: 'pdf/brochure/bro_886.pdf' },
+        { title: 'bro 887', file: 'pdf/brochure/bro_887.pdf' },
+        { title: 'bro 911', file: 'pdf/brochure/bro_911.pdf' },
+        { title: 'bro 912', file: 'pdf/brochure/bro_912.pdf' },
+        { title: 'bro 954', file: 'pdf/brochure/bro_954.pdf' },
+        { title: 'bro 955', file: 'pdf/brochure/bro_955.pdf' },
+        { title: 'bro ab rider', file: 'pdf/brochure/bro_ab_rider.pdf' },
+        { title: 'bro ad db rider', file: 'pdf/brochure/bro_ad_db_rider.pdf' },
+        { title: 'bro pwb rider', file: 'pdf/brochure/bro_pwb_rider.pdf' },
+        { title: 'bro term rider', file: 'pdf/brochure/bro_term_rider.pdf' }
+    ];
+
+    const pdfResources = [
+        { title: 'Female And Minor Underwriting', file: 'pdf/resources/Female_And_Minor_Underwriting.pdf' },
+        { title: 'IRDA claim settlement ratio 2019 20', file: 'pdf/resources/IRDA-claim-settlement-ratio-2019-20.pdf' },
+        { title: 'Non Medical Chart', file: 'pdf/resources/Non_Medical_Chart.pdf' },
+        { title: 'Special Reports Chart Medical', file: 'pdf/resources/Special_Reports_Chart Medical.pdf' },
+        { title: 'Concept Videos', file: 'pdf/Concept Videos.pdf' },
+        { title: 'Plan videos', file: 'pdf/Plan videos.pdf' },
+        { title: 'Term plans', file: 'pdf/Term plans.pdf' },
+        { title: 'Training Videos', file: 'pdf/Training Videos.pdf' }
+    ];
+
+    const docFiles = [
+        { title: 'Concept Videos', file: 'doc/Concept Videos.docx' },
+        { title: 'PF 300 Editable', file: 'doc/PF 300_Editable.docx' },
+        { title: 'Plan videos', file: 'doc/Plan videos.docx' },
+        { title: 'Term plans', file: 'doc/Term plans.docx' },
+        { title: 'Training Videos', file: 'doc/Training Videos.docx' }
+    ];
+
+    const imageFiles = [
+        { title: 'LIC Bonus Inforce 2021-22', file: 'images/LIC_Bonus_Inforce 2021-22.png' },
+        { title: 'LIC Bonus Withdrawn', file: 'images/LIC_Bonus_Withdrawn.png' },
+        { title: 'LIC FAB', file: 'images/LIC_FAB.png' },
+        { title: 'LIC FAB (Other Plans)', file: 'images/LIC_FAB_OtherPlans.png' },
+        { title: 'LIC Plan Types', file: 'images/lic types.png' },
+        { title: 'All-in-One Premium Calculator', file: 'images/LIC-All-in-One-Premium-Calculator.png' },
+        { title: 'LIC Policy Status Guide', file: 'images/lic-policy-status.png' },
+        { title: 'Major Goals Behind Life Insurance', file: 'images/3-major-goals-behind-life-insurance.png' },
+        { title: 'LIC Plans for Working Professionals', file: 'images/5-lic-plans-for-working-professionals_250820070918.jpg' }
+    ];
+
+    const localVideos = [
+        { title: 'LIC Jeevan Utsav Single Premium (Plan 883)', sub: 'Local MP4', url: 'videos/LIC Jeevan Utsav Single Premium (Plan 883) – Lifetime Income from One-Time Investment - Insurance Funda (1080p, h264).mp4', duration: 'MP4', type: 'local' }
+    ];
+
+    const youtubeSources = {
+        plan: [
+            'https://youtu.be/d80CTi3SVeo?si=H4_ChHPr57VEfvpU',
+            'https://youtu.be/BNQOR4hxbXs?si=9YFpOLXuVF1gsZk6',
+            'https://youtu.be/uP0Jdl5WrA8?si=BbIl2nttvh6eQWex',
+            'https://youtu.be/Bpu0eF7BnkM?si=-gfEAB2xy5X9oVBx',
+            'https://youtu.be/PLLp4OiaSuQ?si=3PVNiIMKnqrIlI8_',
+            'https://youtu.be/SlAkaIrIJXI?si=k7bunYuEKncDJXc2',
+            'https://youtu.be/SlAkaIrIJXI?si=INI9tEetodpiNfaB',
+            'https://youtu.be/UZhYAbWb54U?si=Y6NtQPmYAvM5WnEH',
+            'https://youtu.be/B-Q9Dyp-I6c?si=aw-gA4zX3aY3pIdT',
+            'https://youtu.be/ISF6wKSvGfY?si=rFs0SDelswhbb8MA',
+            'https://youtu.be/ISF6wKSvGfY?si=6gLbE-RbCEHcaqaF',
+            'https://youtu.be/TtJ-8LCXNaY?si=osfpgUTjPSLy9QsE',
+            'https://youtu.be/EgZOTHMhTUg?si=3tzzs30QdNShxzEL',
+            'https://youtu.be/2kzoNAqMwBs?si=Ix9YbOEZdHcqfJWT',
+            'https://youtu.be/X6Ms61MnzOI?si=zVVnOt-0qSsYGAoM',
+            'https://youtu.be/MPqK8_TZxl8?si=Z2tDcZg-L4uPhZxk',
+            'https://youtu.be/7PU8uFWUv5Y?si=60uOy1-erkew3i3D',
+            'https://youtu.be/Z3BQjSTsF7Q?si=dnTAq692SgxKWCBZ',
+            'https://youtu.be/iIpBrJCf7Pg?si=iDQHgA-RU-g6_oL7',
+            'https://youtu.be/kG9adEp8n94?si=vgGk8z9xdRsTIiZx',
+            'https://youtu.be/yjyhmjOe8Qk?si=CR40xNLXbePYMa7X',
+            'https://youtu.be/KYZtTWCj0Zw?si=fCuPCLeSRtxuswuV',
+            'https://youtu.be/WwC1FkQeKg4?si=dldc0f3rMWqRJMxP',
+            'https://youtu.be/itscci0xNTs?si=fumP4sHq5vjmlhrw',
+            'https://youtu.be/qJU_Faw5ibM?si=pE9sCB1qI6LMy3Rt',
+            'https://youtu.be/nDDIDsnhmbU?si=CUGoDhvBeFGlcHcY',
+            'https://youtu.be/W1w9H6k41C8?si=JqihFjUcnKtJn8_F',
+            'https://youtu.be/nDDIDsnhmbU?si=O3CNjuyEt6ZLhOyF',
+            'https://youtu.be/eDKIhYvWuKs?si=ENjBXbosqz7xuVXz',
+            'https://youtu.be/YjoXXbdckwQ?si=4PzuT1BSKuoAtSH6'
+        ],
+        concept: [
+            'https://youtu.be/l546LXVBb1Q?si=v3YMh_jkm4WzT1zW',
+            'https://youtu.be/Gcw_nNTZ0FQ?si=pa8-UM19a2vhbpWy',
+            'https://youtu.be/du-P1x8A-eo?si=hrpzh16xu8A0D-pK',
+            'https://youtu.be/EcD2Up0caz8?si=uSfpNDXLYx0Fwkxy',
+            'https://youtu.be/t46dQpHvxxw?si=h7gz-Zy_tlvF4HI1',
+            'https://youtu.be/1OFvCQ-woKw?si=g9V74ViQZB-I2ZCE',
+            'https://youtu.be/pE67OI9wF_g?si=gQKwNAx6XC7lPISP',
+            'https://youtu.be/bzQQHG4WcS4?si=1V9v8ka0bknB5vTp',
+            'https://youtu.be/ASSNjPaO65c?si=GZHgwUZ5WTcGhhZx',
+            'https://youtu.be/iRsCkUKhvdA?si=xWXaOJEgYrxzyOzh',
+            'https://youtu.be/0Qc1Qngsg7w?si=AdKJj8SMPYNzr_nA',
+            'https://youtu.be/1NVSu-zuBv0?si=UEmk72wmcVllPq03'
+        ],
+        training: [
+            'https://youtu.be/vpm4GEkDAgI?si=_T1-NYK5F0lkSTDd',
+            'https://youtu.be/zvMdILEP-oY?si=se2SSIh_70jhmM7f',
+            'https://youtu.be/T4DUBhj3zWc?si=yC2lKVuXkZl0eW_q',
+            'https://youtu.be/MhU5vfao8dY?si=MCk8l5PzCZqMbwXd',
+            'https://youtu.be/Gf1TxId5v1Q?si=BvYh077im3rujcdT',
+            'https://youtu.be/BzzLT_qwpzs?si=QINJJr9z0BZHWcih',
+            'https://youtu.be/OSh89qmJkVI?si=at7HR9jeakf3p6EB',
+            'https://youtu.be/bMYgtaNiUdQ?si=mk9bLfB2V3UtKM79'
+        ]
+    };
+
+    const buildVideoList = (urls, label) => (urls || []).map((url, i) => ({
+        title: `${label} Video ${i + 1}`,
+        sub: label,
+        url,
+        duration: 'YouTube'
+    }));
+
+    const videoLibrary = {
+        plan: [...localVideos, ...buildVideoList(youtubeSources.plan, 'Plan')],
+        concept: buildVideoList(youtubeSources.concept, 'Concept'),
+        help: [],
+        training: buildVideoList(youtubeSources.training, 'Training')
+    };
+
+    const libraryQuick = [
+        { title: 'Need Analysis', sub: 'Coverage planner', action: "showView('needs-analysis')", pill: 'TOOL' },
+        { title: 'Posters', sub: 'Marketing assets', action: "showView('posters')", pill: 'ASSET' },
+        { title: 'Forms', sub: 'Proposal PDFs', action: "showView('forms-section')", pill: 'FORMS' },
+        { title: 'Brochures', sub: 'Sales PDFs', action: "showView('brochures-section')", pill: 'PDFS' },
+        { title: 'Videos', sub: 'YouTube + Local', action: "showView('plan-videos')", pill: 'VIDEO' },
+        { title: 'Profile', sub: 'Agent details', action: "showView('profile')", pill: 'PROFILE' }
+    ];
+
+    const posterThemes = {
+        ocean: { bg1: '#0b1e3a', bg2: '#0e4e7a', accent: '#5dd4ff' },
+        sunset: { bg1: '#3a1a0a', bg2: '#8a3b1b', accent: '#f6b73c' },
+        emerald: { bg1: '#0b2f2a', bg2: '#0d6b52', accent: '#34d399' }
+    };
+
+    const escapeXml = (value) => (value || '').toString().replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[ch]));
+
+    const buildPosterSvg = ({ headline, subline, tag, agent, phone, theme }) => {
+        const colors = posterThemes[theme] || posterThemes.ocean;
+        const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1">
+      <stop offset="0%" stop-color="${colors.bg1}"/>
+      <stop offset="100%" stop-color="${colors.bg2}"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" rx="48" fill="url(#bg)"/>
+  <circle cx="980" cy="140" r="160" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="1000" cy="620" r="240" fill="rgba(0,0,0,0.18)"/>
+  <rect x="80" y="90" width="280" height="52" rx="26" fill="${colors.accent}"/>
+  <text x="110" y="125" font-size="24" font-family="Space Grotesk, Arial, sans-serif" font-weight="700" fill="#0b0f1a">${escapeXml(tag || 'Special Offer')}</text>
+  <text x="80" y="230" font-size="56" font-family="Fraunces, Georgia, serif" font-weight="700" fill="#ffffff">${escapeXml(headline || 'Secure Your Future')}</text>
+  <text x="80" y="300" font-size="26" font-family="Space Grotesk, Arial, sans-serif" fill="#c7d8ff">${escapeXml(subline || 'Protection + savings plans tailored for you')}</text>
+  <rect x="80" y="520" width="1040" height="1" fill="rgba(255,255,255,0.2)"/>
+  <text x="80" y="600" font-size="24" font-family="Space Grotesk, Arial, sans-serif" fill="#ffffff">${escapeXml(agent || 'Your LIC Advisor')}</text>
+  <text x="80" y="640" font-size="22" font-family="Space Grotesk, Arial, sans-serif" fill="#9fb4ea">${escapeXml(phone || '+91 98XXXXXX')}</text>
+  <text x="80" y="700" font-size="18" font-family="Space Grotesk, Arial, sans-serif" fill="#9fb4ea">Fittplan | Insurance & Utilities</text>
+</svg>`;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    };
+
+    const posterGallery = [
+        { title: 'Protection Focus Campaign', file: buildPosterSvg({ headline: 'Protect Every Dream', subline: 'Income protection with flexible plans', tag: 'New Plans', theme: 'ocean' }) },
+        { title: 'Family Shield Highlight', file: buildPosterSvg({ headline: 'Family Shield', subline: 'Secure education and retirement goals', tag: 'Advisor Pick', theme: 'sunset' }) },
+        { title: 'Savings Growth Campaign', file: buildPosterSvg({ headline: 'Savings + Safety', subline: 'Long-term wealth with guaranteed cover', tag: 'Top Rated', theme: 'emerald' }) },
+        { title: 'LIC Plan Types', file: 'images/lic types.png' },
+        { title: 'Premium Calculator', file: 'images/LIC-All-in-One-Premium-Calculator.png' },
+        { title: 'Policy Status Guide', file: 'images/lic-policy-status.png' }
+    ];
+
+    const usefulShortcuts = [
+        { title: 'Need Analysis', sub: 'Coverage planning', action: "showView('needs-analysis')", pill: 'TOOL' },
+        { title: 'Magic Poster', sub: 'Create marketing assets', action: "showView('poster-builder')", pill: 'NEW' },
+        { title: 'Forms', sub: 'Proposal PDFs', action: "showView('forms-section')", pill: 'FORMS' },
+        { title: 'Brochures', sub: 'Plan PDFs', action: "showView('brochures-section')", pill: 'PDFS' },
+        { title: 'Videos', sub: 'Plan + concept', action: "showView('plan-videos')", pill: 'VIDEO' },
+        { title: 'Library', sub: 'All assets', action: "showView('library')", pill: 'LIB' }
+    ];
+
+    const usefulLinks = [
+        { title: 'Ananda App (Web Version)', icon: 'fas fa-globe', url: 'https://licindia.in' },
+        { title: 'LIC Digital (Web Version)', icon: 'fas fa-globe', url: 'https://customer.onlinelic.in' },
+        { title: 'LIC Website Premium Calculator', icon: 'fas fa-calculator', url: 'https://licindia.in' },
+        { title: 'LIC Portal (NRI)', icon: 'fas fa-plane', url: 'https://licindia.in' },
+        { title: 'Quick Pay Premium (NRI)', icon: 'fas fa-plane', url: 'https://licindia.in' },
+        { title: 'E-NACH Registration', icon: 'fas fa-calendar-alt', url: 'https://licindia.in' },
+        { title: 'E-NACH - To Activate One Mly Premium', icon: 'fas fa-calendar-alt', url: 'https://licindia.in' }
+    ];
+    const planRates = {
+        "914": { name: "New Endowment (914)", bonus: 45, fab: 0, terms: Array.from({length: 24}, (_, i) => i + 12) },
+        "915": { name: "New Jeevan Anand (915)", bonus: 48, fab: 0, terms: Array.from({length: 21}, (_, i) => i + 15) },
+        "933": { name: "Jeevan Lakshya (933)", bonus: 46, fab: 0, terms: Array.from({length: 13}, (_, i) => i + 13) },
+        "936": { name: "Jeevan Labh (936)", bonus: 47, fab: 0, terms: [16, 21, 25] },
+        "943": { name: "Aadhaar Stambh (943)", bonus: 35, fab: 0, terms: Array.from({length: 11}, (_, i) => i + 10) },
+        "944": { name: "Aadhaar Shila (944)", bonus: 35, fab: 0, terms: Array.from({length: 11}, (_, i) => i + 10) },
+        "945": { name: "Jeevan Umang (945)", bonus: 40, fab: 0, terms: [15, 20, 25, 30] },
+        "947": { name: "Jeevan Shiromani (947)", bonus: 50, fab: 0, terms: [14, 16, 18, 20] },
+        "948": { name: "Bima Shree (948)", bonus: 47, fab: 0, terms: [14, 16, 18, 20] },
+        "951": { name: "Jeevan Amar (951)", bonus: 0, fab: 0, terms: Array.from({length: 31}, (_, i) => i + 10) }
+    };
+
+    function updateTerms() {
+        const planCode = document.getElementById('plan').value;
+        const plan = planRates[planCode];
+        const termSelect = document.getElementById('term');
+        if (!plan || !termSelect) return;
+        
+        termSelect.innerHTML = '';
+        plan.terms.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = t + ' Years';
+            termSelect.appendChild(opt);
+        });
+    }
+
+    // ============ VIEW MANAGEMENT ============
+    const allViews = ['home','tools','needs-analysis','posters','poster-builder','useful-links','withdrawn-plans','withdrawn-plan-report','library','earnings-calc','revival-calc','age-tool','income-tool','media-tool','forms-section','brochures-section','plan-videos','concept-videos','help-videos','training-videos','profile'];
+    let profileImageData = '';
+    let currentPDFFilename = null, currentPDFUrl = null;
+
+    function showView(name) {
+        allViews.forEach(v => {
+            const el = document.getElementById('view-' + v);
+            if (el) el.classList.add('hidden');
+        });
+        const target = document.getElementById('view-' + name);
+        if (target) target.classList.remove('hidden');
+        window.scrollTo(0,0);
+
+        // Update bottom nav active state
+        document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+        const navMap = {
+            home: 'nav-home',
+            tools: 'nav-tools',
+            'needs-analysis': 'nav-tools',
+            posters: 'nav-tools',
+            'poster-builder': 'nav-tools',
+            'useful-links': 'nav-tools',
+            'withdrawn-plans': 'nav-tools',
+            library: 'nav-tools',
+            'earnings-calc': 'nav-tools',
+            'revival-calc': 'nav-tools',
+            'age-tool': 'nav-tools',
+            'income-tool': 'nav-tools',
+            'media-tool': 'nav-tools',
+            'forms-section': 'nav-forms',
+            'brochures-section': 'nav-forms',
+            'plan-videos': 'nav-videos',
+            'concept-videos': 'nav-videos',
+            'help-videos': 'nav-videos',
+            'training-videos': 'nav-videos',
+            profile: 'nav-profile'
+        };
+        if (navMap[name]) document.getElementById(navMap[name]).classList.add('active');
+
+        if (name === 'profile') loadSavedData();
+        if (name === 'home') renderHome();
+        if (name === 'library') renderLibrary();
+        if (name === 'forms-section') renderForms();
+        if (name === 'brochures-section') renderBrochures();
+        if (name === 'posters') renderPosters();
+        if (name === 'poster-builder') initPosterBuilder();
+        if (name === 'useful-links') renderUsefulLinks();
+        if (name === 'withdrawn-plans') renderWithdrawnPlans();
+        if (name.endsWith('-videos')) renderVideos(name.replace('-videos',''));
+    }
+
+    // ============ VIDEO RENDER ============
+    function renderVideos(category) {
+        const data = videoLibrary[category] || [];
+        const colors = { plan:'#1a3a8f', concept:'#3a1a7a', help:'#1a6a3a', training:'#6a3a1a' };
+        const icons = { plan:'fas fa-play', concept:'fas fa-lightbulb', help:'fas fa-circle-question', training:'fas fa-chalkboard-user' };
+        const listEl = document.getElementById(category + '-videos-list');
+        if (!listEl) return;
+        if (data.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#5a6a99;"><i class="fas fa-video-slash" style="font-size:40px;margin-bottom:12px;display:block;"></i>No videos available.</div>';
+            return;
+        }
+        listEl.innerHTML = data.map((v, i) => `
+            <div class="video-item" onclick="openVideo('${v.url}', '${v.title}', '${v.sub}', '${v.type || 'youtube'}')">
+                <div class="video-left">
+                    <div class="video-icon" style="background:linear-gradient(135deg,${colors[category]},${colors[category]}99);">
+                        <i class="${icons[category]}" style="color:white;font-size:15px;${category==='plan'?'margin-left:3px':''}"></i>
+                    </div>
+                    <div>
+                        <p class="video-title">${v.title}${v.type === 'local' ? ' <span style="background:#f39c12;color:#1a1c24;font-size:8px;font-weight:800;padding:2px 6px;border-radius:10px;vertical-align:middle;">LOCAL</span>' : ''}</p>
+                        <p class="video-sub">${v.sub} - ${v.duration || 'Video'}</p>
+                    </div>
+                </div>
+                <i class="${v.type === 'local' ? 'fas fa-play-circle' : 'fas fa-external-link-alt'}" style="color:#4a5580;font-size:${v.type === 'local' ? '18px' : '12px'};"></i>
+            </div>
+        `).join('');
+    }
+
+    // ============ LIBRARY RENDER ============
+    let libraryUploadBound = false;
+    const filterByTerm = (items, term) => {
+        if (!term) return items;
+        const q = term.toLowerCase();
+        return (items || []).filter(item => {
+            const hay = `${item.title || ''} ${item.sub || ''}`.toLowerCase();
+            return hay.includes(q);
+        });
+    };
+    function renderLibrary(searchTerm = '') {
+        const liveValue = document.getElementById('library-search')?.value || '';
+        const term = (searchTerm || liveValue).trim().toLowerCase();
+        const quickEl = document.getElementById('library-quick');
+        if (quickEl) {
+            quickEl.innerHTML = libraryQuick.map(item => `
+                <div class="asset-card" onclick="${item.action}">
+                    <div>
+                        <strong>${item.title}</strong>
+                        <small>${item.sub}</small>
+                    </div>
+                    <span class="asset-pill">${item.pill}</span>
+                </div>
+            `).join('');
+        }
+
+        const docsEl = document.getElementById('library-docs');
+        if (docsEl) {
+            const docs = [
+                ...pdfForms.map(d => ({ ...d, type: 'Form' })),
+                ...pdfBrochures.map(d => ({ ...d, type: 'Brochure' }))
+            ];
+            const filteredDocs = filterByTerm(docs, term);
+            docsEl.innerHTML = filteredDocs.length ? filteredDocs.map(doc => `
+                <div class="asset-card" onclick="openPDFUrl('${doc.file}', '${doc.title}')">
+                    <div>
+                        <strong>${doc.title}</strong>
+                        <small>${doc.type} - PDF</small>
+                    </div>
+                    <span class="asset-pill">${doc.type.toUpperCase()}</span>
+                </div>
+            `).join('') : '<div class="empty-state">No matching PDFs found.</div>';
+        }
+
+        const resEl = document.getElementById('library-resources');
+        if (resEl) {
+            const filteredRes = filterByTerm(pdfResources, term);
+            resEl.innerHTML = filteredRes.length ? filteredRes.map(doc => `
+                <div class="asset-card" onclick="openPDFUrl('${doc.file}', '${doc.title}')">
+                    <div>
+                        <strong>${doc.title}</strong>
+                        <small>Resource - PDF</small>
+                    </div>
+                    <span class="asset-pill">RESOURCE</span>
+                </div>
+            `).join('') : '<div class="empty-state">No matching resources found.</div>';
+        }
+
+        const docxEl = document.getElementById('library-docx');
+        if (docxEl) {
+            const filteredDocx = filterByTerm(docFiles, term);
+            docxEl.innerHTML = filteredDocx.length ? filteredDocx.map(doc => `
+                <div class="asset-card" onclick="downloadFile('${doc.file}', '${doc.title}.docx')">
+                    <div>
+                        <strong>${doc.title}</strong>
+                        <small>Editable - DOCX</small>
+                    </div>
+                    <span class="asset-pill">DOCX</span>
+                </div>
+            `).join('') : '<div class="empty-state">No matching DOCX files found.</div>';
+        }
+
+        const vidsEl = document.getElementById('library-videos');
+        if (vidsEl) {
+            const flat = Object.entries(videoLibrary).flatMap(([cat, list]) =>
+                (list || []).map(v => ({ ...v, category: cat }))
+            );
+            const filteredVids = filterByTerm(flat, term);
+            vidsEl.innerHTML = filteredVids.length ? filteredVids.map(v => `
+                <div class="asset-card" onclick="openVideo('${v.url}', '${v.title}', '${v.sub}', '${v.type || 'youtube'}')">
+                    <div>
+                        <strong>${v.title}</strong>
+                        <small>${v.sub} - ${v.duration || 'Video'}</small>
+                    </div>
+                    <span class="asset-pill">${(v.category || 'VIDEO').toUpperCase()}</span>
+                </div>
+            `).join('') : '<div class="empty-state">No matching videos found.</div>';
+        }
+
+        const grid = document.getElementById('library-image-grid');
+        if (grid) {
+            const filteredImgs = filterByTerm(imageFiles, term);
+            grid.innerHTML = filteredImgs.length ? filteredImgs.map(img => `
+                <img src="${normalizeLocalUrl(img.file)}" alt="${img.title}" onclick="openImage('${img.file}', '${img.title}')">
+            `).join('') : '<div class="empty-state">No matching images found.</div>';
+        }
+
+        if (!libraryUploadBound) {
+            const uploader = document.getElementById('library-image-upload');
+            if (uploader) {
+                uploader.addEventListener('change', () => {
+                    const localGrid = document.getElementById('library-image-grid');
+                    if (!localGrid) return;
+                    Array.from(uploader.files || []).forEach(file => {
+                        const url = URL.createObjectURL(file);
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = file.name;
+                        img.onload = () => URL.revokeObjectURL(url);
+                        localGrid.appendChild(img);
+                    });
+                });
+                libraryUploadBound = true;
+            }
+        }
+    }
+
+    function renderForms(query = '') {
+        const el = document.getElementById('forms-list');
+        if (!el) return;
+        const liveValue = document.getElementById('forms-search')?.value || '';
+        const filtered = filterByTerm(pdfForms, (query || liveValue).trim());
+        el.innerHTML = filtered.length ? filtered.map(f => `
+            <div class="form-card" onclick="openPDFUrl('${f.file}', '${f.title}')">
+                <div class="form-icon"><i class="fas fa-file-lines" style="color:white;font-size:20px;"></i></div>
+                <div style="flex:1;">
+                    <p style="font-weight:700;font-size:15px;">${f.title}</p>
+                    <p style="font-size:11px;color:#90b8e0;margin-top:2px;">PDF Form</p>
+                    <span class="form-badge">PDF</span>
+                </div>
+                <button class="form-save-btn" onclick="event.stopPropagation();downloadFile('${f.file}', '${f.title}.pdf')"><i class="fas fa-download"></i> Save</button>
+            </div>
+        `).join('') : '<div class="empty-state">No matching forms found.</div>';
+    }
+
+    function renderBrochures(query = '') {
+        const el = document.getElementById('brochures-list');
+        if (!el) return;
+        const liveValue = document.getElementById('brochures-search')?.value || '';
+        const filtered = filterByTerm(pdfBrochures, (query || liveValue).trim());
+        el.innerHTML = filtered.length ? filtered.map(b => `
+            <div class="form-card" onclick="openPDFUrl('${b.file}', '${b.title}')">
+                <div class="form-icon"><i class="fas fa-book-open" style="color:white;font-size:20px;"></i></div>
+                <div style="flex:1;">
+                    <p style="font-weight:700;font-size:15px;">${b.title}</p>
+                    <p style="font-size:11px;color:#90b8e0;margin-top:2px;">PDF Brochure</p>
+                    <span class="form-badge">PDF</span>
+                </div>
+                <button class="form-save-btn" onclick="event.stopPropagation();downloadFile('${b.file}', '${b.title}.pdf')"><i class="fas fa-download"></i> Save</button>
+            </div>
+        `).join('') : '<div class="empty-state">No matching brochures found.</div>';
+    }
+
+    const formatINR = (value) => '₹' + Math.round(value).toLocaleString('en-IN');
+
+    function openImage(url, title) {
+        const safeUrl = normalizeLocalUrl(url);
+        if (!safeUrl) return;
+        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    function calcNeeds() {
+        const income = parseFloat(document.getElementById('need-income').value);
+        const years = parseInt(document.getElementById('need-years').value, 10);
+        const liabilities = parseFloat(document.getElementById('need-liabilities').value) || 0;
+        const existing = parseFloat(document.getElementById('need-existing').value) || 0;
+        const goals = parseFloat(document.getElementById('need-goals').value) || 0;
+        const bufferMonths = parseInt(document.getElementById('need-buffer').value, 10) || 6;
+
+        if (isNaN(income) || income <= 0) { alert("Enter valid monthly income."); return; }
+        if (isNaN(years) || years <= 0) { alert("Select income replacement years."); return; }
+
+        const annual = income * 12;
+        const incomeCover = annual * years;
+        const buffer = income * bufferMonths;
+        const total = Math.max(0, incomeCover + liabilities + goals + buffer - existing);
+
+        document.getElementById('need-annual').innerText = formatINR(annual);
+        document.getElementById('need-income-cover').innerText = formatINR(incomeCover);
+        document.getElementById('need-liab-show').innerText = formatINR(liabilities);
+        document.getElementById('need-goals-show').innerText = formatINR(goals);
+        document.getElementById('need-buffer-show').innerText = formatINR(buffer);
+        document.getElementById('need-existing-show').innerText = existing > 0 ? '- ' + formatINR(existing) : formatINR(0);
+        document.getElementById('need-total').innerText = formatINR(total);
+        document.getElementById('needs-results').classList.remove('hidden');
+        document.getElementById('needs-results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderHome() {
+        const dateEl = document.getElementById('today-date');
+        if (dateEl) {
+            const today = new Date();
+            dateEl.textContent = today.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+        const totalVideos = Object.values(videoLibrary).reduce((sum, list) => sum + (list || []).length, 0);
+        const kpis = [
+            { label: 'Forms', value: pdfForms.length, sub: 'PDF library' },
+            { label: 'Brochures', value: pdfBrochures.length, sub: 'Sales docs' },
+            { label: 'Videos', value: totalVideos, sub: 'Plan & training' },
+            { label: 'Resources', value: pdfResources.length, sub: 'Guides' }
+        ];
+        const kpiEl = document.getElementById('home-kpi-grid');
+        if (kpiEl) {
+            kpiEl.innerHTML = kpis.map(k => `
+                <div class="kpi-card">
+                    <small>${k.label}</small>
+                    <b>${k.value}</b>
+                    <span class="section-sub">${k.sub}</span>
+                </div>
+            `).join('');
+        }
+        const strip = document.getElementById('home-featured-strip');
+        if (strip) {
+            const featured = imageFiles.slice(0, 6);
+            strip.innerHTML = featured.length ? featured.map(img => `
+                <img src="${normalizeLocalUrl(img.file)}" alt="${img.title}" onclick="openImage('${img.file}', '${img.title}')">
+            `).join('') : '<div class="empty-state">No images found.</div>';
+        }
+    }
+
+    function calcNeeds() {
+        const income = parseFloat(document.getElementById('need-income').value);
+        const years = parseInt(document.getElementById('need-years').value, 10);
+        const liabilities = parseFloat(document.getElementById('need-liabilities').value) || 0;
+        const existing = parseFloat(document.getElementById('need-existing').value) || 0;
+        const goals = parseFloat(document.getElementById('need-goals').value) || 0;
+        const bufferMonths = parseInt(document.getElementById('need-buffer').value, 10) || 6;
+
+        if (isNaN(income) || income <= 0) { alert("Enter valid monthly income."); return; }
+        if (isNaN(years) || years <= 0) { alert("Select income replacement years."); return; }
+
+        const annual = income * 12;
+        const incomeCover = annual * years;
+        const buffer = income * bufferMonths;
+        const total = Math.max(0, incomeCover + liabilities + goals + buffer - existing);
+
+        document.getElementById('need-annual').innerText = formatINR(annual);
+        document.getElementById('need-income-cover').innerText = formatINR(incomeCover);
+        document.getElementById('need-liab-show').innerText = formatINR(liabilities);
+        document.getElementById('need-goals-show').innerText = formatINR(goals);
+        document.getElementById('need-buffer-show').innerText = formatINR(buffer);
+        document.getElementById('need-existing-show').innerText = existing > 0 ? '- ' + formatINR(existing) : formatINR(0);
+        document.getElementById('need-total').innerText = formatINR(total);
+        document.getElementById('needs-results').classList.remove('hidden');
+        document.getElementById('needs-results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    const getFileExtension = (path) => {
+        if (!path) return 'png';
+        if (path.startsWith('data:image/svg')) return 'svg';
+        const match = path.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+        return match ? match[1] : 'png';
+    };
+
+    function renderPosters() {
+        const grid = document.getElementById('poster-gallery');
+        if (!grid) return;
+        grid.innerHTML = posterGallery.length ? posterGallery.map(item => {
+            const ext = getFileExtension(item.file);
+            const filename = `${item.title}.${ext}`;
+            return `
+                <div class="poster-card">
+                    <img src="${normalizeLocalUrl(item.file)}" alt="${item.title}">
+                    <strong>${item.title}</strong>
+                    <div class="poster-actions">
+                        <button class="btn-secondary" onclick="openImage('${item.file}', '${item.title}')">Preview</button>
+                        <button class="btn-primary" onclick="downloadFile('${item.file}', '${filename}')">Download</button>
+                    </div>
+                </div>
+            `;
+        }).join('') : '<div class="empty-state">No posters available yet.</div>';
+    }
+
+    let posterBuilderInit = false;
+    let posterPreviewData = '';
+    function initPosterBuilder() {
+        if (posterBuilderInit) { generatePoster(); return; }
+        ['poster-headline','poster-subline','poster-tag','poster-agent','poster-phone'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', generatePoster);
+        });
+        const themeEl = document.getElementById('poster-theme');
+        if (themeEl) themeEl.addEventListener('change', generatePoster);
+        posterBuilderInit = true;
+        generatePoster();
+    }
+    function generatePoster() {
+        const data = buildPosterSvg({
+            headline: document.getElementById('poster-headline')?.value,
+            subline: document.getElementById('poster-subline')?.value,
+            tag: document.getElementById('poster-tag')?.value,
+            agent: document.getElementById('poster-agent')?.value,
+            phone: document.getElementById('poster-phone')?.value,
+            theme: document.getElementById('poster-theme')?.value
+        });
+        posterPreviewData = data;
+        const img = document.getElementById('poster-preview-img');
+        if (img) img.src = data;
+    }
+    function downloadPoster() {
+        if (!posterPreviewData) generatePoster();
+        if (posterPreviewData) downloadFile(posterPreviewData, 'Fittplan_Poster.svg');
+    }
+
+    function renderUsefulLinks() {
+        const listEl = document.getElementById('useful-links-list');
+        if (listEl) {
+            listEl.innerHTML = usefulLinks.length ? usefulLinks.map(link => `
+                <a class="link-card" href="${link.url}" target="_blank" rel="noopener noreferrer" style="padding: 20px 14px; border-radius: 0; border: none; border-bottom: 1px solid #2a3050; background: transparent; display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer;">
+                    <i class="${link.icon}" style="color:#b4c5ff;font-size:20px;width:24px;text-align:center;"></i>
+                    <strong style="flex:1; font-size:15px; color:#e0e6ff; font-weight:500;">${link.title}</strong>
+                    <i class="fas fa-share-nodes" style="color:#b4c5ff;font-size:18px;"></i>
+                </a>
+            `).join('') : '';
+        }
+    }
+
+    const withdrawnPlansData = [
+        {
+            number: '1', name: 'Whole Life(without Profits)', type: 'Whole Life Plan', date: '01/05/98',
+            minAge: '15 Years lbd', maxAge: '60 Years nbd', maxMatAge: '75 Years', minTerm: '5 Years', maxTerm: '10 Years',
+            minSumAssert: '10,000', multiplesOf: '5,000', modes: 'Yly/Hly', accidentBenefit: 'Not available',
+            features: [
+                'Premiums are to be paid up to age 80 Years of life assured or 35 Years Term, which ever is less.',
+                'This is considered as a cheapest form of the policy.',
+                'On Maturity: sum assured will be payable'
+            ],
+            benefitPattern: { title: '(Age-30 & Sum Assured-100000)', subTitle: '(Plan/Term:50/35)', sumAssured: '100000', bonus: '0', fab: '0', maturity: '100000' }
+        },
+        {
+            number: '3', name: 'Limited Payment Life Policy(Regular Premium)', type: 'Endowment Plan', date: '15/02/03',
+            minAge: '12 yeas lbd', maxAge: '60 years nbd', maxMatAge: '70 years', minTerm: '5 Years', maxTerm: '55 Years',
+            minSumAssert: '50,000', multiplesOf: '5,000', modes: 'Yly/Hly/Qly/Mly', accidentBenefit: 'Not available',
+            features: [
+                'Premiums are to be paid for a limited period of time but coverage continues for life.',
+                'The premium payment is completed in the most productive years.',
+                'On maturity: Sum assured shall be paid'
+            ],
+            benefitPattern: { title: '(Age-30 & Sum Assured-100000)', subTitle: '(Plan/Term:50/25)', sumAssured: '100000', bonus: '0', fab: '0', maturity: '100000' }
+        },
+        {
+            number: '7', name: 'Limited Payment Life Policy(Regular Premium)', type: 'Endowment Plan', date: '15/02/03',
+            minAge: '12 yeas lbd', maxAge: '60 years nbd', maxMatAge: '70 years', minTerm: '5 Years', maxTerm: '55 Years',
+            minSumAssert: '50,000', multiplesOf: '5,000', modes: 'Single premium', accidentBenefit: 'Not available',
+            features: [
+                'Premiums are to be paid for a limited period of time but coverage continues for life.',
+                'The premium payment is completed in the most productive years.',
+                'On maturity: Sum assured shall be paid'
+            ],
+            benefitPattern: { title: '(Age-30 & Sum Assured-100000)', subTitle: '(Plan/Term:50/1)', sumAssured: '100000', bonus: '0', fab: '0', maturity: '100000' }
+        },
+        {
+            number: '11', name: 'Endowment Policy(without profit)', type: 'Endowment Plan', date: '14/11/02',
+            minAge: '12 Years', maxAge: '65 Years', maxMatAge: '75 Years', minTerm: '5 Years', maxTerm: '55 Years',
+            minSumAssert: '10,000', multiplesOf: '500', modes: 'Yly/Hly/Qly/Mly', accidentBenefit: 'Rs 1 extra per 1000 SA',
+            features: [
+                'Premium to be paid for full policy term or policy holders death which ever is earlier.',
+                'On survival till maturity Sum assured will be paid.',
+                'In case of death before the maturity date Sum assured is paid to the nominee.'
+            ],
+            benefitPattern: { title: '(Age-30 & Sum Assured-100000)', subTitle: '(Plan/Term:25/25)', sumAssured: '100000', bonus: '0', fab: '0', maturity: '100000' }
+        }
+    ];
+
+    function renderWithdrawnPlans() {
+        const container = document.getElementById('withdrawn-plans-directory');
+        if (!container) return;
+        container.innerHTML = withdrawnPlansData.map((plan, index) => `
+            <div class="menu-item" onclick="openWithdrawnReport(${index})" style="margin-bottom:12px;display:flex;align-items:center;gap:16px;background:#1a1a24;border:1px solid #4a5580;border-radius:12px;padding:16px;">
+                <div style="width:46px;height:46px;border-radius:50%;background:#e0e6ff;color:#1a1a24;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;border:2px solid #f5a6b0;flex-shrink:0;">${plan.number}</div>
+                <div style="flex:1;">
+                    <p style="font-size:15px;font-weight:600;color:#e0e6ff;line-height:1.2;">${plan.name}</p>
+                    <p style="font-size:13px;color:#f5a6b0;margin-top:4px;font-weight:500;">${plan.type}</p>
+                    <p style="font-size:12px;color:#bcf5ea;margin-top:4px;font-weight:400;">Withdrawn on:${plan.date}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openWithdrawnReport(index) {
+        const plan = withdrawnPlansData[index];
+        const container = document.getElementById('withdrawn-report-container');
+        
+        container.innerHTML = `
+            <div style="border: 1px solid #4a5580; border-radius: 12px; padding: 16px; background: #1a1a24; display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: #e0e6ff; color: #1a1a24; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; border: 2px solid #f5a6b0; flex-shrink:0;">${plan.number}</div>
+                <div>
+                    <p style="font-size: 16px; font-weight: 600; color: #ffffff; line-height: 1.3;">${plan.name}</p>
+                    <p style="font-size: 14px; color: #f5a6b0; margin-top: 4px; font-weight: 500;">${plan.type}</p>
+                    <p style="font-size: 14px; color: #e0e6ff; margin-top: 4px; font-weight: 400;">Withdrawn on:${plan.date}</p>
+                </div>
+            </div>
+
+            <table class="wp-table">
+                <tr><td>Min Age</td><td>${plan.minAge}</td></tr>
+                <tr><td>Max Age</td><td>${plan.maxAge}</td></tr>
+                <tr><td>Max Maturity Age</td><td>${plan.maxMatAge}</td></tr>
+                <tr><td>Min Term</td><td>${plan.minTerm}</td></tr>
+                <tr><td>Maximum Term</td><td>${plan.maxTerm}</td></tr>
+                <tr><td>Min Sum Assured</td><td>${plan.minSumAssert}</td></tr>
+                <tr><td>Sum Assured in Multiples of</td><td>${plan.multiplesOf}</td></tr>
+                <tr><td>Modes</td><td>${plan.modes}</td></tr>
+                <tr><td>Accident Benefit</td><td>${plan.accidentBenefit}</td></tr>
+            </table>
+
+            <div class="wp-header">Plan Features</div>
+            <div class="wp-body">
+                <ul>
+                    ${plan.features.map(f => `<li>${f}</li>`).join('')}
+                </ul>
+            </div>
+
+            <div class="wp-pattern">
+                <div style="font-size:16px;font-weight:600;color:#fff;">Benefit Pattern Example</div>
+                <div style="font-size:14px;color:#c7d8ff;margin-top:6px;">${plan.benefitPattern.title}</div>
+                <div style="font-size:14px;color:#c7d8ff;margin-top:2px;">${plan.benefitPattern.subTitle}</div>
+            </div>
+            <table class="wp-table" style="margin-top:-2px;">
+                <tr><td>Sum Assured</td><td>${plan.benefitPattern.sumAssured}</td></tr>
+                <tr><td>Bonus</td><td>${plan.benefitPattern.bonus}</td></tr>
+                <tr><td>FAB</td><td>${plan.benefitPattern.fab}</td></tr>
+                <tr><td>Maturity</td><td>${plan.benefitPattern.maturity}</td></tr>
+            </table>
+        `;
+        
+        showView('withdrawn-plan-report');
+    }
+
+    function openVideo(url, title, sub, type) {
+        if (type === 'local') {
+            closeYouTubePlayer();
+            document.getElementById('video-player-title').innerText = title || 'Video';
+            document.getElementById('video-player-sub').innerText = sub || '';
+            const player = document.getElementById('local-video-player');
+            player.src = normalizeLocalUrl(url);
+            player.load();
+            document.getElementById('video-player-overlay').classList.remove('hidden');
+        } else {
+            openYouTubePlayer(url, title, sub);
+        }
+    }
+
+    function closeVideoPlayer() {
+        const player = document.getElementById('local-video-player');
+        player.pause();
+        player.src = '';
+        document.getElementById('video-player-overlay').classList.add('hidden');
+    }
+
+    function getYouTubeId(url) {
+        const match = (url || '').match(/(?:v=|\/embed\/|\.be\/)([A-Za-z0-9_-]{6,})/);
+        return match ? match[1] : '';
+    }
+
+    function openYouTubePlayer(url, title, sub) {
+        const id = getYouTubeId(url);
+        if (!id) { window.open(url, '_blank', 'noopener,noreferrer'); return; }
+        closeVideoPlayer();
+        document.getElementById('youtube-player-title').innerText = title || 'YouTube';
+        document.getElementById('youtube-player-sub').innerText = sub || '';
+        const iframe = document.getElementById('youtube-iframe');
+        iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+        document.getElementById('youtube-player-overlay').classList.remove('hidden');
+    }
+
+    function closeYouTubePlayer() {
+        const iframe = document.getElementById('youtube-iframe');
+        iframe.src = '';
+        document.getElementById('youtube-player-overlay').classList.add('hidden');
+    }
+
+    // ============ PDF VIEWER ============
+    function normalizeLocalUrl(url) {
+        if (!url) return url;
+        if (/^(https?:|data:|blob:|mailto:)/i.test(url)) return url;
+        return encodeURI(url);
+    }
+
+    function openPDFUrl(url, title) {
+        const safeUrl = normalizeLocalUrl(url);
+        currentPDFUrl = safeUrl;
+        currentPDFFilename = title.replace(/[^a-z0-9]/gi,'_') + '.pdf';
+        document.getElementById('pdf-viewer-title').innerText = title;
+        document.getElementById('pdf-iframe').src = safeUrl;
+        document.getElementById('pdf-viewer-overlay').classList.remove('hidden');
+    }
+    function closePDFViewer() {
+        document.getElementById('pdf-viewer-overlay').classList.add('hidden');
+        document.getElementById('pdf-iframe').src = '';
+    }
+    function downloadCurrentPDF() {
+        if (currentPDFUrl) downloadFile(currentPDFUrl, currentPDFFilename);
+    }
+    function downloadFile(url, filename) {
+        const a = document.createElement('a');
+        a.href = normalizeLocalUrl(url);
+        if (filename) a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    // ============ MAIN CALCULATOR ============
+    function calculate() {
+        const name = document.getElementById('name').value.trim() || "Valued Client";
+        const sa = parseFloat(document.getElementById('sa').value);
+        const term = parseInt(document.getElementById('term').value);
+        const planCode = document.getElementById('plan').value;
+        const plan = planRates[planCode] || { name: "Plan " + planCode, bonus: 45, fab: 0 };
+
+        if (isNaN(sa) || sa <= 0) { alert("Please enter a valid Sum Assured."); return; }
+        
+        let bonus = (sa / 1000) * plan.bonus * term;
+        let maturity = sa + bonus;
+        // Premium Payment Term (PPT) calculation logic
+        let premTerm = term;
+        if (planCode === '936') {
+            if (term === 25) premTerm = 16;
+            else if (term === 21) premTerm = 15;
+            else if (term === 16) premTerm = 10;
+        } else if (planCode === '933') {
+            premTerm = Math.max(0, term - 3);
+        } else if (planCode === '947' || planCode === '948') {
+            premTerm = Math.max(0, term - 4);
+        }
+        
+        const totalPrem = (sa * (planCode === '951' ? 0.015 : 0.045)) * premTerm;
+
+        document.getElementById('res-client-name').innerText = name;
+        document.getElementById('res-sa').innerText = '₹' + sa.toLocaleString('en-IN');
+        document.getElementById('res-bonus').innerText = '₹' + Math.round(bonus).toLocaleString('en-IN');
+        document.getElementById('res-maturity').innerText = '₹' + Math.round(maturity).toLocaleString('en-IN');
+        document.getElementById('res-total-prem').innerText = '₹' + Math.round(totalPrem).toLocaleString('en-IN');
+        saveCalculation({ name, plan: plan.name, sa, maturity, date: new Date().toLocaleDateString('en-IN') });
+        document.getElementById('results').classList.remove('hidden');
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const name = document.getElementById('res-client-name').innerText;
+        const clean = (v) => (v || '').replace(/₹/g, 'INR ');
+        doc.setFont('helvetica','bold'); doc.setFontSize(18);
+        doc.text("Fittplan - Policy Summary", 15, 20);
+        doc.setFontSize(12); doc.setFont('helvetica','normal');
+        doc.text(`Client: ${name}`, 15, 40);
+        doc.text(`Sum Assured: ${clean(document.getElementById('res-sa').innerText)}`, 15, 52);
+        doc.text(`Estimated Bonus: ${clean(document.getElementById('res-bonus').innerText)}`, 15, 64);
+        doc.text(`Total Premium: ${clean(document.getElementById('res-total-prem').innerText)}`, 15, 76);
+        doc.setFont('helvetica','bold');
+        doc.text(`Maturity Benefit: ${clean(document.getElementById('res-maturity').innerText)}`, 15, 92);
+        doc.setFontSize(9); doc.setFont('helvetica','italic');
+        doc.text("Generated by Fittplan | " + new Date().toLocaleDateString(), 15, 280);
+        doc.save(`Fittplan_${name}.pdf`);
+    }
+
+    // ============ EARNINGS CALCULATOR ============
+    function calcEarnings() {
+        const premium = parseFloat(document.getElementById('earn-premium').value);
+        const planType = document.getElementById('earn-plan-type').value;
+        const year = document.getElementById('earn-year').value;
+        const count = parseInt(document.getElementById('earn-count').value) || 1;
+        if (isNaN(premium) || premium <= 0) { alert("Enter valid premium amount."); return; }
+
+        const rates = {
+            endowment: { '1': 0.25, '2': 0.075, '3': 0.075, renewal: 0.05 },
+            term:      { '1': 0.35, '2': 0.075, '3': 0.075, renewal: 0.05 },
+            annuity:   { '1': 0.02, '2': 0.02,  '3': 0.02,  renewal: 0.02 },
+            ulip:      { '1': 0.04, '2': 0.03,  '3': 0.02,  renewal: 0.015 },
+        };
+        const commRate = rates[planType][year];
+        const commAmount = premium * commRate * count;
+
+        // Bonus commission (for 1st year only)
+        let bonusCommRate = 0, bonusComm = 0;
+        if (year === '1') {
+            bonusCommRate = planType === 'endowment' ? 0.10 : planType === 'term' ? 0.12 : 0;
+            bonusComm = premium * bonusCommRate * count;
+        }
+
+        const total = commAmount + bonusComm;
+
+        const rows = [
+            { label: 'Base Commission', rate: `${(commRate*100).toFixed(1)}%`, amount: commAmount },
+        ];
+        if (bonusComm > 0) rows.push({ label: 'Bonus Commission', rate: `${(bonusCommRate*100).toFixed(1)}%`, amount: bonusComm });
+        if (count > 1) rows.push({ label: `× ${count} Policies`, rate: '—', amount: total });
+
+        document.getElementById('earn-table-body').innerHTML = rows.map((r, i) =>
+            `<tr ${i === rows.length - 1 ? 'class="highlight-row"' : ''}>
+                <td>${r.label}</td>
+                <td>${r.rate}</td>
+                <td>₹${Math.round(r.amount).toLocaleString('en-IN')}</td>
+            </tr>`
+        ).join('');
+        document.getElementById('earn-total').innerText = '₹' + Math.round(total).toLocaleString('en-IN');
+        document.getElementById('earn-results').classList.remove('hidden');
+        document.getElementById('earn-results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============ REVIVAL LATE FEE ============
+    function calcRevival() {
+        const premium = parseFloat(document.getElementById('rev-premium').value);
+        const lapseDate = new Date(document.getElementById('rev-lapse-date').value);
+        const revivalDate = new Date(document.getElementById('rev-revival-date').value);
+        const rate = parseFloat(document.getElementById('rev-rate').value);
+
+        if (isNaN(premium) || premium <= 0) { alert("Enter valid premium amount."); return; }
+        if (!document.getElementById('rev-lapse-date').value) { alert("Enter lapse date."); return; }
+        if (!document.getElementById('rev-revival-date').value) { alert("Enter revival date."); return; }
+        if (revivalDate <= lapseDate) { alert("Revival date must be after lapse date."); return; }
+
+        const diffMs = revivalDate - lapseDate;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const interest = premium * (rate / 100) * (diffDays / 365);
+        const total = premium + interest;
+
+        const months = Math.floor(diffDays / 30);
+        const days = diffDays % 30;
+        const durationStr = months > 0 ? `${months} months ${days} days` : `${diffDays} days`;
+
+        document.getElementById('rev-prem-show').innerText = '₹' + premium.toLocaleString('en-IN');
+        document.getElementById('rev-duration').innerText = durationStr;
+        document.getElementById('rev-rate-show').innerText = rate + '% p.a.';
+        document.getElementById('rev-interest').innerText = '₹' + Math.round(interest).toLocaleString('en-IN');
+        document.getElementById('rev-total').innerText = '₹' + Math.round(total).toLocaleString('en-IN');
+        document.getElementById('rev-results').classList.remove('hidden');
+        document.getElementById('rev-results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============ AGE CALC ============
+    function calcAge() {
+        const dobVal = document.getElementById('dob-input').value;
+        if (!dobVal) { alert("Please select a date of birth."); return; }
+        const dob = new Date(dobVal);
+        const today = new Date();
+        if (dob > today) { alert("Date cannot be in the future."); return; }
+        let years = today.getFullYear() - dob.getFullYear();
+        let months = today.getMonth() - dob.getMonth();
+        let days = today.getDate() - dob.getDate();
+        if (days < 0) { months--; days += new Date(today.getFullYear(), today.getMonth(), 0).getDate(); }
+        if (months < 0) { years--; months += 12; }
+        document.getElementById('age-years-big').innerText = years + ' Years';
+        document.getElementById('age-detail').innerText = `${months} months and ${days} days`;
+        document.getElementById('age-result-box').classList.remove('hidden');
+    }
+
+    // ============ INCOME TAX ============
+    function calcIncome() {
+        const monthly = parseFloat(document.getElementById('monthly-income').value);
+        if (isNaN(monthly) || monthly < 0) { alert("Enter a valid salary."); return; }
+        const annual = monthly * 12;
+        const taxable = Math.max(0, annual - 50000);
+        let tax = 0;
+        if (taxable > 1000000) tax = 112500 + (taxable - 1000000) * 0.30;
+        else if (taxable > 500000) tax = 12500 + (taxable - 500000) * 0.20;
+        else if (taxable > 250000) tax = (taxable - 250000) * 0.05;
+        tax = tax * 1.04;
+        document.getElementById('ann-inc').innerText = '₹' + annual.toLocaleString('en-IN');
+        document.getElementById('est-tax').innerText = '₹' + Math.round(tax).toLocaleString('en-IN');
+        document.getElementById('take-home').innerText = '₹' + Math.round((annual - tax) / 12).toLocaleString('en-IN');
+        document.getElementById('income-res').classList.remove('hidden');
+    }
+
+    // ============ IMAGE TOOLS ============
+    async function processImage(type) {
+        const file = document.getElementById('media-upload').files[0];
+        if (!file) { alert("Select an image first."); return; }
+        const status = document.getElementById('media-status');
+        status.innerText = "Processing...";
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (type === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const img = new Image();
+                img.onload = function() {
+                    const doc = new jsPDF({ orientation: img.width > img.height ? 'landscape' : 'portrait' });
+                    const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+                    const r = Math.min(pw / img.width, ph / img.height);
+                    const format = file.type && file.type.toLowerCase().includes('png') ? 'PNG' : 'JPEG';
+                    doc.addImage(e.target.result, format, 10, 10, img.width * r - 20, img.height * r - 20);
+                    doc.save("fittplan_export.pdf");
+                    status.innerText = "PDF downloaded.";
+                };
+                img.src = e.target.result;
+            } else {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('compress-canvas');
+                    canvas.width = img.width * 0.6; canvas.height = img.height * 0.6;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'compressed.jpg'; a.click();
+                        URL.revokeObjectURL(url);
+                        status.innerText = `Compressed (${Math.round(blob.size/1024)} KB).`;
+                    }, 'image/jpeg', 0.6);
+                };
+                img.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ============ PROFILE ============
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => { profileImageData = e.target.result; displayProfileImage(profileImageData); };
+        reader.readAsDataURL(file);
+    }
+    function displayProfileImage(base64) {
+        const img = document.getElementById('profile-img-display');
+        const icon = document.getElementById('default-icon');
+        img.src = base64; img.style.display = 'block'; icon.style.display = 'none';
+    }
+    function saveProfile() {
+        const mobile = document.getElementById('prof-mobile').value;
+        if (mobile && !/^\d{10}$/.test(mobile)) { alert("Enter valid 10-digit mobile number."); return; }
+        localStorage.setItem('fittplan_profile', JSON.stringify({
+            name: document.getElementById('prof-name').value,
+            address: document.getElementById('prof-address').value,
+            email: document.getElementById('prof-email').value,
+            mobile, image: profileImageData
+        }));
+        alert("Profile saved.");
+    }
+    function loadProfile() {
+        const p = JSON.parse(localStorage.getItem('fittplan_profile')) || {};
+        if (p.name) document.getElementById('prof-name').value = p.name;
+        if (p.address) document.getElementById('prof-address').value = p.address;
+        if (p.email) document.getElementById('prof-email').value = p.email;
+        if (p.mobile) document.getElementById('prof-mobile').value = p.mobile;
+        if (p.image) { profileImageData = p.image; displayProfileImage(p.image); }
+    }
+    function saveCalculation(data) {
+        let h = JSON.parse(localStorage.getItem('fittplan_history')) || [];
+        h.unshift(data);
+        if (h.length > 50) h = h.slice(0, 50);
+        localStorage.setItem('fittplan_history', JSON.stringify(h));
+    }
+    function loadSavedData() {
+        const container = document.getElementById('saved-list');
+        const history = JSON.parse(localStorage.getItem('fittplan_history')) || [];
+        if (!history.length) { container.innerHTML = '<p style="text-align:center;color:#5a6a99;padding:24px 0;">No calculations saved yet.</p>'; return; }
+        container.innerHTML = history.map(item => `
+            <div class="history-card">
+                <div><p style="font-weight:700;color:#d0d8ff;font-size:14px;">${item.name}</p><p style="font-size:11px;color:#5a6a99;margin-top:2px;">${item.plan} · ${item.date}</p></div>
+                <p style="font-weight:700;color:#b4c5ff;font-size:14px;">₹${Number(item.maturity).toLocaleString('en-IN')}</p>
+            </div>
+        `).join('');
+    }
+    function exportUserData() {
+        const data = {
+            profile: JSON.parse(localStorage.getItem('fittplan_profile')) || {},
+            history: JSON.parse(localStorage.getItem('fittplan_history')) || [],
+            withdrawn: JSON.parse(localStorage.getItem('fittplan_withdrawn')) || []
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'fittplan_backup_' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    function importUserData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.profile) localStorage.setItem('fittplan_profile', JSON.stringify(data.profile));
+                if (data.history) localStorage.setItem('fittplan_history', JSON.stringify(data.history));
+                if (data.withdrawn) localStorage.setItem('fittplan_withdrawn', JSON.stringify(data.withdrawn));
+                alert("Data imported successfully. Refreshing...");
+                location.reload();
+            } catch (err) { alert("Invalid data file."); }
+        };
+        reader.readAsText(file);
+    }
+    function clearAllData() {
+        if (confirm("Clear all calculation history and user data? (Profile will be kept)")) { 
+            localStorage.removeItem('fittplan_history'); 
+            loadSavedData(); 
+        }
+    }
+
+    // ============ 3D BACKGROUND ============
+    function init3DBackground() {
+        const canvas = document.getElementById('bg-canvas');
+        if(!canvas) return;
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0a0f1c, 0.001);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.setZ(30);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        const pointLight = new THREE.PointLight(0x78a3ff, 1);
+        pointLight.position.set(10, 10, 10);
+        const pointLight2 = new THREE.PointLight(0xf6b73c, 0.8);
+        pointLight2.position.set(-10, -10, 5);
+        scene.add(ambientLight, pointLight, pointLight2);
+
+        const group = new THREE.Group();
+        scene.add(group);
+        
+        const geometry1 = new THREE.TorusGeometry(10, 3, 16, 100);
+        const material1 = new THREE.MeshStandardMaterial({ 
+            color: 0x243c78, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const torus = new THREE.Mesh(geometry1, material1);
+        group.add(torus);
+
+        const geometry2 = new THREE.IcosahedronGeometry(4, 1);
+        const material2 = new THREE.MeshPhysicalMaterial({
+            color: 0x3db1c4,
+            metalness: 0.8,
+            roughness: 0.2,
+            transparent: true,
+            opacity: 0.5,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1
+        });
+        const icosa = new THREE.Mesh(geometry2, material2);
+        icosa.position.set(15, 5, -10);
+        group.add(icosa);
+
+        const geometry3 = new THREE.OctahedronGeometry(5, 0);
+        const material3 = new THREE.MeshPhysicalMaterial({
+            color: 0xf6b73c,
+            metalness: 0.5,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.6,
+            wireframe: false
+        });
+        const octa = new THREE.Mesh(geometry3, material3);
+        octa.position.set(-15, -10, -5);
+        group.add(octa);
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 400;
+        const posArray = new Float32Array(particlesCount * 3);
+        for(let i=0; i<particlesCount*3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            color: 0x78a3ff,
+            transparent: true,
+            opacity: 0.8
+        });
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            torus.rotation.x += 0.005;
+            torus.rotation.y += 0.002;
+            torus.rotation.z += 0.003;
+
+            icosa.rotation.x -= 0.004;
+            icosa.rotation.y -= 0.004;
+
+            octa.rotation.x += 0.005;
+            octa.rotation.y -= 0.002;
+
+            particlesMesh.rotation.y -= 0.0005;
+
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
+
+            group.rotation.y += 0.05 * (targetX - group.rotation.y);
+            group.rotation.x += 0.05 * (targetY - group.rotation.x);
+            
+            camera.position.x += (mouseX * 0.005 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 0.005 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
+
+    // ============ INIT ============
+    window.onload = function() {
+        init3DBackground();
+        loadProfile();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dob-input').setAttribute('max', today);
+        document.getElementById('rev-revival-date').value = today;
+        const formsCountEl = document.getElementById('forms-count');
+        if (formsCountEl) formsCountEl.textContent = pdfForms.length.toString();
+        const brochuresCountEl = document.getElementById('brochures-count');
+        if (brochuresCountEl) brochuresCountEl.textContent = pdfBrochures.length.toString();
+        
+        updateTerms();
+        
+        showView('home');
+    };
+    </script>
+</body>
+</html>
